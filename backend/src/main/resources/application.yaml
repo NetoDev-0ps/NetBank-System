@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: banco-digital-api
+
+  datasource:
+    # URL de conexão: jdbc:postgresql://localhost:PORTA/NOME_DO_BANCO
+    url: jdbc:postgresql://localhost:5432/bancodigital_db
+    username: postgres
+    password: Admin # <--- Coloque a senha que você definiu na instalação!
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    # Isso diz ao Hibernate: "Crie/Atualize as tabelas automaticamente"
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true # Deixa o SQL no log mais bonitinho
+        dialect: org.hibernate.dialect.PostgreSQLDialect

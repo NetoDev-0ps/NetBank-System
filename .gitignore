@@ -1,0 +1,31 @@
+# --- BANCO DE DADOS (CRÍTICO) ---
+postgres-data/
+*.sql
+*.db
+
+# --- DEPENDÊNCIAS (IGNORAR EM QUALQUER PASTA) ---
+**/node_modules/
+**/dist/
+**/build/
+**/target/
+**/.mvn/
+**/wrapper/
+coverage/
+
+# --- ARQUIVOS DE SISTEMA E IDE ---
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# --- AMBIENTE E LOGS ---
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
