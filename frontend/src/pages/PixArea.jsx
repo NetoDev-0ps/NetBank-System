@@ -13,11 +13,11 @@ import {
 
 const mascaraCPF = (v) =>
   v
-    .replace(/\D/g, "")
+    .replaceAll(/\D/g, "")
     .replace(/(\d{3})(\d)/, "$1.$2")
     .replace(/(\d{3})(\d)/, "$1.$2")
     .replace(/(\d{3})(\d{1,2})/, "$1-$2")
-    .replace(/(-\d{2})\d+?$/, "$1");
+    .replace(/(-\d{2})\d+$/, "$1");
 
 function PixArea() {
   const navigate = useNavigate();
@@ -40,10 +40,10 @@ function PixArea() {
     setLoading(true);
 
     try {
-      const valorNum = parseFloat(valor);
+      const valorNum = Number.parseFloat(valor);
       const dadosPix = {
         cpfRemetente: usuario.cpf,
-        chaveDestino: chaveDestino.replace(/\D/g, ""), // Limpa pontos e traços para o Java
+        chaveDestino: chaveDestino.replaceAll(/\D/g, ""), // Limpa pontos e traços para o Java
         valor: valorNum,
       };
 
@@ -89,7 +89,6 @@ function PixArea() {
         <div className="w-10"></div>
       </div>
 
-      {/* ALTERADO: Adicionado motion.div para casar com as variantes e limpar erro */}
       <motion.div
         variants={pageVariants}
         initial="initial"

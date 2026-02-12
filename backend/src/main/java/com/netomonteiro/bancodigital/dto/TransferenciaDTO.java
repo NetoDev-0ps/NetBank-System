@@ -15,6 +15,6 @@ public class TransferenciaDTO {
     private Long idDestino;
 
     @NotNull(message = "O valor é obrigatório")
-    @Positive(message = "O valor da transferência deve ser maior que zero") // <--- A MÁGICA AQUI
+    @Positive(message = "O valor da transferência deve ser maior que zero")
     private BigDecimal valor;
 }

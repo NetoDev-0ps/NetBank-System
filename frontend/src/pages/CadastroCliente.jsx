@@ -1,8 +1,8 @@
 import { useState } from "react";
-import api from "../services/api"; // Ajuste o caminho conforme a localização do arquivo
+import api from "../services/api";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-const Motion = motion; // <-- Adicione esta linha exata aqui
+const Motion = motion;
 import {
   UserPlus,
   ChevronLeft,
@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import Notification from "../components/Notification";
 
-// Variantes de Animação (Padrão de Design de Alta Performance)
+// Variantes de Animação
 const containerVariants = {
   hidden: { opacity: 0, scale: 0.98 },
   visible: {

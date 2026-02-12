@@ -2,8 +2,6 @@ import React from "react";
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle, X, Trash2 } from "lucide-react";
-
-// Modal Genérico de Confirmação (Padrão Senior)
 const ConfirmationModal = ({
   isOpen,
   onClose,

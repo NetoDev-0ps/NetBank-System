@@ -18,13 +18,9 @@ const LoginCliente = () => {
 
     // Simulação de API (Delay de Rede)
     setTimeout(() => {
-      // VALIDAÇÃO DE EXEMPLO (Pode usar qualquer email/senha para testar)
       if (email && senha) {
-        // --- O PULO DO GATO (INTEGRAÇÃO COM APP.JSX) ---
-        // Salvamos o token específico que a RotaCliente exige
         localStorage.setItem("cliente_token", "logado");
 
-        // Salvamos dados do usuário para o Dashboard usar
         localStorage.setItem("usuario_nome", "Cliente NetBank");
         localStorage.setItem("usuario_saldo", "1250.00");
 

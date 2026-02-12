@@ -19,7 +19,6 @@ const LoginGerente = () => {
     // Simulação de delay de rede para UX
     setTimeout(() => {
       // LÓGICA DE ACESSO ADMINISTRATIVO (Hardcoded para teste)
-      // Em produção, isso seria uma chamada api.post("/auth/admin")
       if (email === "admin@netbank.com.br" && senha === "admin123") {
         localStorage.setItem("token", "logado-como-gerente"); // Token esperado pelo App.jsx
         localStorage.setItem("usuario-nome", "Carlos Gerente");

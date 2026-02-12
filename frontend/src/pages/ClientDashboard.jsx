@@ -16,8 +16,7 @@ import {
 } from "lucide-react";
 
 // eslint-disable-next-line no-unused-vars
-import { motion } from "framer-motion"; // Adicione este import
-
+import { motion } from "framer-motion";
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -41,17 +40,17 @@ const itemVariants = {
 function ClientDashboard() {
   const navigate = useNavigate();
 
-  // 1. CORREÇÃO: Inicializa o estado lendo direto do localStorage (Lazy Init)
+  // 1. Inicializa o estado lendo direto do localStorage (Lazy Init)
   // Isso evita o erro de "setState inside useEffect" e remove o aviso do ESLint
   const [usuario] = useState(() => {
     const dados = localStorage.getItem("cliente_dados");
     return dados ? JSON.parse(dados) : null;
   });
 
-  // 2. CORREÇÃO: Adicionado o estado para controlar o "Olhinho" do saldo
+  // 2. estado para controlar o "Olhinho" do saldo
   const [mostrarSaldo, setMostrarSaldo] = useState(true);
 
-  // 3. O useEffect agora serve SÓ para expulsar quem não tem login
+  // 3. O useEffect para expulsar quem não tem login
   useEffect(() => {
     if (!usuario) {
       navigate("/login-cliente");
@@ -272,7 +271,7 @@ function ClientDashboard() {
   );
 }
 
-// Componentes Auxiliares (Dark Mode)
+// Componentes Auxiliares
 const NavItem = ({ icon, label, active }) => (
   <div
     className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition ${active ? "bg-blue-600 text-white shadow-lg shadow-blue-900/20" : "text-slate-400 hover:text-white hover:bg-slate-800"}`}

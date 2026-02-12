@@ -1,17 +1,13 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import PropTypes from "prop-types";
-
-// --- ÁREA DE IMPORTS (O QUE FALTAVA) ---
-// O React precisa saber onde estão esses arquivos para exibi-los
 import Home from "./pages/Home";
 import LoginGerente from "./pages/LoginGerente";
 import LoginCliente from "./pages/LoginCliente";
 import CadastroCliente from "./pages/CadastroCliente";
 import Painel from "./pages/PainelGerente";
 import ClientDashboard from "./pages/ClientDashboard";
-import PixArea from "./pages/PixArea"; // Importante para o fluxo que acabamos de criar
-// ----------------------------------------
+import PixArea from "./pages/PixArea";
 
 // --- MANTER ESTE BLOCO ACIMA DA FUNCTION APP ---
 const RotaGerente = ({ children }) => {
@@ -24,7 +20,6 @@ const RotaCliente = ({ children }) => {
   return isLogado ? children : <Navigate to="/login-cliente" />;
 };
 
-// Validação de Props para o padrão Senior [cite: 2026-02-11]
 RotaGerente.propTypes = {
   children: PropTypes.node.isRequired,
 };
@@ -32,10 +27,9 @@ RotaGerente.propTypes = {
 RotaCliente.propTypes = {
   children: PropTypes.node.isRequired,
 };
-// -----------------------------------------------
 
 function App() {
-  const location = useLocation(); // Captura a mudança de URL para animar a saída [cite: 2026-02-11]
+  const location = useLocation(); // Captura a mudança de URL para animar a saída
 
   return (
     // O AnimatePresence gerencia a animação de SAÍDA das rotas

@@ -28,13 +28,13 @@ const Home = () => {
 
   return (
     <div className="min-h-screen overflow-x-hidden font-sans text-white bg-slate-950 selection:bg-blue-500/30">
-      {/* BACKGROUND ELEMENTS (Efeito de Luz - ORIGINAL MANTIDO) */}
+      {/* BACKGROUND ELEMENTS */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] bg-blue-600/20 rounded-full blur-[120px] opacity-50" />
         <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[100px] opacity-40" />
       </div>
 
-      {/* NAVBAR - ORIGINAL MANTIDO */}
+      {/* NAVBAR */}
       <nav className="relative z-50 flex items-center justify-between px-6 py-6 mx-auto max-w-7xl">
         <div className="flex items-center gap-2">
           <img
@@ -60,7 +60,7 @@ const Home = () => {
         </div>
       </nav>
 
-      {/* HERO SECTION - ORIGINAL MANTIDO */}
+      {/* HERO SECTION */}
       <main className="relative z-10 px-6 pt-20 pb-0 mx-auto max-w-7xl md:pt-20">
         <motion.div
           variants={containerVariants}
@@ -109,9 +109,7 @@ const Home = () => {
           </motion.div>
         </motion.div>
 
-        {/* --- AQUI COMEÇA A NOVA ÁREA (SUBSTITUINDO OS FEATURE CARDS ANTIGOS) --- */}
-
-        {/* 1. SECTION: Título "Tudo em um só app" + Imagem dos iPhones */}
+        {/* 1. SECTION */}
         <section className="mt-32 text-center">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
@@ -126,7 +124,6 @@ const Home = () => {
               </span>
             </h2>
 
-            {/* Espaço reservado para a imagem app-showcase.png */}
             <div className="relative mt-1 group">
               {/* Efeito de Glow atrás da imagem */}
               <div className="absolute inset-0 bg-blue-600/20 blur-[120px] rounded-full opacity-60 group-hover:opacity-80 transition-opacity duration-700" />
@@ -140,7 +137,7 @@ const Home = () => {
           </motion.div>
         </section>
 
-        {/* 2. SECTION: Grid de Features (Estilo Big Tech / C6) */}
+        {/* 2. SECTION */}
         <section className="pb-12 border-t mb-14 border-slate-900/50">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
@@ -174,13 +171,12 @@ const Home = () => {
         </section>
       </main>
 
-      {/* FOOTER - ORIGINAL MANTIDO */}
+      {/* FOOTER */}
       <FooterPremium />
     </div>
   );
 };
 
-// Novo Componente para as Features Grandes (Estilo C6)
 const BigFeatureCard = ({ icon, title, desc, linkText }) => (
   <div className="flex flex-col items-center text-center group">
     <div className="p-6 mb-6 transition-colors border rounded-3xl bg-slate-900/50 border-slate-800 group-hover:border-blue-500/30 text-slate-300 group-hover:text-blue-400">
@@ -203,7 +199,7 @@ const BigFeatureCard = ({ icon, title, desc, linkText }) => (
   </div>
 );
 
-// --- COMPONENTE FOOTER PREMIUM (MANTIDO EXATAMENTE IGUAL AO SEU) ---
+// --- COMPONENTE FOOTER PREMIUM  ---
 const FooterPremium = () => {
   return (
     <footer className="pt-20 pb-12 font-sans border-t bg-slate-800 border-slate-900 text-slate-300">
@@ -387,7 +383,6 @@ const FooterPremium = () => {
         {/* SEPARADOR E PARTE INFERIOR (ATENDIMENTO) */}
         <div className="my-12 border-t border-slate-800" />
         <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4">
-          {/* (Código de atendimento mantido igual ao seu original) */}
           <div>
             <h3 className="mb-2 text-xl font-bold text-white">Atendimento</h3>
             <p className="mb-6 text-xs text-slate-500">
