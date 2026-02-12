@@ -56,6 +56,17 @@ O sistema foi desenhado seguindo os princípios de **Clean Code** e **SOLID**, g
 * **Java JDK 17** (Preferencialmente Amazon Corretto 17)
 * **Node.js 18+**
 
+
+## 🚀 Guia de Instalação e Execução
+
+Siga rigorosamente os passos abaixo para replicar o ambiente em sua máquina local.
+
+### Clonando o Repositório
+Abra o terminal na pasta onde deseja salvar o projeto e execute:
+```bash
+git clone [https://github.com/NetoDev-0ps/NetBank-System.git](https://github.com/NetoDev-0ps/NetBank-System.git)
+cd NetBank-System
+````
 ### 1️⃣ Infraestrutura (Banco de Dados)
 Suba o container do PostgreSQL em modo *detached*:
 ```bash
