@@ -110,7 +110,7 @@ const Home = () => {
         </motion.div>
 
         {/* --- AQUI COMEÇA A NOVA ÁREA (SUBSTITUINDO OS FEATURE CARDS ANTIGOS) --- */}
-        
+
         {/* 1. SECTION: Título "Tudo em um só app" + Imagem dos iPhones */}
         <section className="mt-32 text-center">
           <motion.div
@@ -125,17 +125,17 @@ const Home = () => {
                 Em um só app.
               </span>
             </h2>
-            
+
             {/* Espaço reservado para a imagem app-showcase.png */}
             <div className="relative mt-1 group">
-               {/* Efeito de Glow atrás da imagem */}
-               <div className="absolute inset-0 bg-blue-600/20 blur-[120px] rounded-full opacity-60 group-hover:opacity-80 transition-opacity duration-700" />
-               
-               <img 
-                 src="/public/iphone01.png" 
-                 alt="App NetBank nos iPhones" 
-                 className=" relative z-10 w-full max-w-5xl mx-auto drop-shadow-2xl transition-transform duration-700 hover:scale-[1.02]"
-               />
+              {/* Efeito de Glow atrás da imagem */}
+              <div className="absolute inset-0 bg-blue-600/20 blur-[120px] rounded-full opacity-60 group-hover:opacity-80 transition-opacity duration-700" />
+
+              <img
+                src="/public/iphone01.png"
+                alt="App NetBank nos iPhones"
+                className=" relative z-10 w-full max-w-5xl mx-auto drop-shadow-2xl transition-transform duration-700 hover:scale-[1.02]"
+              />
             </div>
           </motion.div>
         </section>
@@ -156,14 +156,14 @@ const Home = () => {
               desc="Sem anuidade e com programa de pontos que nunca expiram. Controle total pelo app em tempo real."
               linkText="Conhecer cartões"
             />
-             {/* Feature 2: Conta Digital */}
+            {/* Feature 2: Conta Digital */}
             <BigFeatureCard
               icon={<Smartphone size={40} strokeWidth={1.5} />}
               title="Conta digital completa"
               desc="Pix e transferências ilimitadas. Pague boletos, recarregue o celular e muito mais."
               linkText="Abra sua conta"
             />
-             {/* Feature 3: Investimentos */}
+            {/* Feature 3: Investimentos */}
             <BigFeatureCard
               icon={<TrendingUp size={40} strokeWidth={1.5} />}
               title="Investimentos"
@@ -172,7 +172,6 @@ const Home = () => {
             />
           </motion.div>
         </section>
-
       </main>
 
       {/* FOOTER - ORIGINAL MANTIDO */}
@@ -188,12 +187,18 @@ const BigFeatureCard = ({ icon, title, desc, linkText }) => (
       {icon}
     </div>
     <h3 className="mb-4 text-2xl font-bold text-white">{title}</h3>
-    <p className="max-w-sm mx-auto mb-8 leading-relaxed text-slate-400">{desc}</p>
+    <p className="max-w-sm mx-auto mb-8 leading-relaxed text-slate-400">
+      {desc}
+    </p>
     <a
       href="#"
       className="flex items-center gap-2 font-bold text-blue-500 transition-colors hover:text-blue-400 group-hover/link:gap-3"
     >
-      {linkText} <ChevronRight size={16} className="transition-transform group-hover:translate-x-1"/>
+      {linkText}{" "}
+      <ChevronRight
+        size={16}
+        className="transition-transform group-hover:translate-x-1"
+      />
     </a>
   </div>
 );
@@ -210,12 +215,42 @@ const FooterPremium = () => {
             <h4 className="text-xs font-bold tracking-widest text-white uppercase">
               Nossos Produtos
             </h4>
-            <a href="#" className="text-sm transition-colors hover:text-blue-400">Conta Corrente</a>
-            <a href="#" className="text-sm transition-colors hover:text-blue-400">Cartão de Crédito</a>
-            <a href="#" className="text-sm transition-colors hover:text-blue-400">Conta Internacional</a>
-            <a href="#" className="text-sm transition-colors hover:text-blue-400">Conta PJ</a>
-            <a href="#" className="text-sm transition-colors hover:text-blue-400">Empréstimos</a>
-            <a href="#" className="text-sm font-bold text-blue-500 transition-colors hover:text-blue-400">Mapa do Site</a>
+            <a
+              href="#"
+              className="text-sm transition-colors hover:text-blue-400"
+            >
+              Conta Corrente
+            </a>
+            <a
+              href="#"
+              className="text-sm transition-colors hover:text-blue-400"
+            >
+              Cartão de Crédito
+            </a>
+            <a
+              href="#"
+              className="text-sm transition-colors hover:text-blue-400"
+            >
+              Conta Internacional
+            </a>
+            <a
+              href="#"
+              className="text-sm transition-colors hover:text-blue-400"
+            >
+              Conta PJ
+            </a>
+            <a
+              href="#"
+              className="text-sm transition-colors hover:text-blue-400"
+            >
+              Empréstimos
+            </a>
+            <a
+              href="#"
+              className="text-sm font-bold text-blue-500 transition-colors hover:text-blue-400"
+            >
+              Mapa do Site
+            </a>
           </div>
 
           {/* Coluna 2: Dúvidas */}
@@ -223,11 +258,36 @@ const FooterPremium = () => {
             <h4 className="text-xs font-bold tracking-widest text-white uppercase">
               Dúvidas
             </h4>
-            <a href="#" className="text-sm transition-colors hover:text-blue-400">Central de Ajuda</a>
-            <a href="#" className="text-sm transition-colors hover:text-blue-400">Canal de Transparência</a>
-            <a href="#" className="text-sm transition-colors hover:text-blue-400">Documentos e Tarifas</a>
-            <a href="#" className="text-sm transition-colors hover:text-blue-400">LGPD</a>
-            <a href="#" className="text-sm transition-colors hover:text-blue-400">Renegociação</a>
+            <a
+              href="#"
+              className="text-sm transition-colors hover:text-blue-400"
+            >
+              Central de Ajuda
+            </a>
+            <a
+              href="#"
+              className="text-sm transition-colors hover:text-blue-400"
+            >
+              Canal de Transparência
+            </a>
+            <a
+              href="#"
+              className="text-sm transition-colors hover:text-blue-400"
+            >
+              Documentos e Tarifas
+            </a>
+            <a
+              href="#"
+              className="text-sm transition-colors hover:text-blue-400"
+            >
+              LGPD
+            </a>
+            <a
+              href="#"
+              className="text-sm transition-colors hover:text-blue-400"
+            >
+              Renegociação
+            </a>
           </div>
 
           {/* Coluna 3: Sobre Nós */}
@@ -235,36 +295,91 @@ const FooterPremium = () => {
             <h4 className="text-xs font-bold tracking-widest text-white uppercase">
               Sobre Nós
             </h4>
-            <a href="#" className="text-sm transition-colors hover:text-blue-400">Quem Somos</a>
-            <a href="#" className="text-sm transition-colors hover:text-blue-400">Carreiras NetBank</a>
-            <a href="#" className="text-sm transition-colors hover:text-blue-400">Blog</a>
-            <a href="#" className="text-sm transition-colors hover:text-blue-400">Imprensa</a>
-            <a href="#" className="text-sm transition-colors hover:text-blue-400">Sustentabilidade</a>
+            <a
+              href="#"
+              className="text-sm transition-colors hover:text-blue-400"
+            >
+              Quem Somos
+            </a>
+            <a
+              href="#"
+              className="text-sm transition-colors hover:text-blue-400"
+            >
+              Carreiras NetBank
+            </a>
+            <a
+              href="#"
+              className="text-sm transition-colors hover:text-blue-400"
+            >
+              Blog
+            </a>
+            <a
+              href="#"
+              className="text-sm transition-colors hover:text-blue-400"
+            >
+              Imprensa
+            </a>
+            <a
+              href="#"
+              className="text-sm transition-colors hover:text-blue-400"
+            >
+              Sustentabilidade
+            </a>
           </div>
 
           {/* Coluna 4 e 5: Apps e Social */}
           <div className="flex flex-col items-start col-span-2 gap-6 lg:items-end">
             <div className="flex flex-col gap-3 w-full max-w-[200px]">
               <button className="flex items-center gap-3 px-4 py-2 transition border rounded-lg border-slate-700 bg-slate-900/50 hover:bg-slate-800 group">
-                <Smartphone size={24} className="text-slate-400 group-hover:text-white" />
+                <Smartphone
+                  size={24}
+                  className="text-slate-400 group-hover:text-white"
+                />
                 <div className="text-left">
-                  <p className="text-[10px] uppercase text-slate-500">Disponível no</p>
+                  <p className="text-[10px] uppercase text-slate-500">
+                    Disponível no
+                  </p>
                   <p className="text-sm font-bold text-white">Google Play</p>
                 </div>
               </button>
               <button className="flex items-center gap-3 px-4 py-2 transition border rounded-lg border-slate-700 bg-slate-900/50 hover:bg-slate-800 group">
-                <Globe size={24} className="text-slate-400 group-hover:text-white" />
+                <Globe
+                  size={24}
+                  className="text-slate-400 group-hover:text-white"
+                />
                 <div className="text-left">
-                  <p className="text-[10px] uppercase text-slate-500">Baixar na</p>
+                  <p className="text-[10px] uppercase text-slate-500">
+                    Baixar na
+                  </p>
                   <p className="text-sm font-bold text-white">App Store</p>
                 </div>
               </button>
             </div>
             <div className="flex gap-6 mt-2">
-              <a href="#" className="transition text-slate-500 hover:text-white">IG</a>
-              <a href="#" className="transition text-slate-500 hover:text-white">X</a>
-              <a href="#" className="transition text-slate-500 hover:text-white">IN</a>
-              <a href="#" className="transition text-slate-500 hover:text-white">YT</a>
+              <a
+                href="#"
+                className="transition text-slate-500 hover:text-white"
+              >
+                IG
+              </a>
+              <a
+                href="#"
+                className="transition text-slate-500 hover:text-white"
+              >
+                X
+              </a>
+              <a
+                href="#"
+                className="transition text-slate-500 hover:text-white"
+              >
+                IN
+              </a>
+              <a
+                href="#"
+                className="transition text-slate-500 hover:text-white"
+              >
+                YT
+              </a>
             </div>
           </div>
         </div>
@@ -272,13 +387,22 @@ const FooterPremium = () => {
         {/* SEPARADOR E PARTE INFERIOR (ATENDIMENTO) */}
         <div className="my-12 border-t border-slate-800" />
         <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4">
-           {/* (Código de atendimento mantido igual ao seu original) */}
-           <div>
+          {/* (Código de atendimento mantido igual ao seu original) */}
+          <div>
             <h3 className="mb-2 text-xl font-bold text-white">Atendimento</h3>
-            <p className="mb-6 text-xs text-slate-500">24 horas por dia, 7 dias por semana</p>
+            <p className="mb-6 text-xs text-slate-500">
+              24 horas por dia, 7 dias por semana
+            </p>
             <div className="mb-4">
-              <p className="text-sm font-bold text-white">Acesse pelo celular</p>
-              <a href="#" className="text-sm font-bold text-blue-500 hover:underline">No chat do app</a>
+              <p className="text-sm font-bold text-white">
+                Acesse pelo celular
+              </p>
+              <a
+                href="#"
+                className="text-sm font-bold text-blue-500 hover:underline"
+              >
+                No chat do app
+              </a>
             </div>
             <div>
               <p className="text-sm font-bold text-white">WhatsApp</p>
@@ -287,7 +411,9 @@ const FooterPremium = () => {
           </div>
           <div className="flex flex-col justify-end">
             <div className="mb-4">
-              <p className="text-sm font-bold text-white">Capitais e regiões metropolitanas</p>
+              <p className="text-sm font-bold text-white">
+                Capitais e regiões metropolitanas
+              </p>
               <p className="text-sm font-bold text-blue-500">3003 6116</p>
             </div>
             <div>
@@ -297,7 +423,9 @@ const FooterPremium = () => {
           </div>
           <div>
             <h3 className="mb-2 text-xl font-bold text-white">SAC</h3>
-            <p className="mb-6 text-xs text-slate-500">24 horas por dia, 7 dias por semana</p>
+            <p className="mb-6 text-xs text-slate-500">
+              24 horas por dia, 7 dias por semana
+            </p>
             <div>
               <p className="text-sm font-bold text-white">Todas as regiões</p>
               <p className="text-sm font-bold text-blue-500">0800 660 0060</p>
@@ -305,12 +433,19 @@ const FooterPremium = () => {
           </div>
           <div>
             <h3 className="mb-2 text-xl font-bold text-white">Ouvidoria</h3>
-            <p className="mb-6 text-xs text-slate-500">Segunda a sexta, exceto feriados</p>
+            <p className="mb-6 text-xs text-slate-500">
+              Segunda a sexta, exceto feriados
+            </p>
             <div className="mb-4">
               <p className="text-sm font-bold text-white">Das 9h às 18h</p>
               <p className="text-sm font-bold text-blue-500">0800 660 6060</p>
             </div>
-            <a href="#" className="text-sm font-bold text-blue-500 hover:underline">Página de ouvidoria</a>
+            <a
+              href="#"
+              className="text-sm font-bold text-blue-500 hover:underline"
+            >
+              Página de ouvidoria
+            </a>
           </div>
         </div>
 

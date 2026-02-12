@@ -52,15 +52,17 @@ const LoginCliente = () => {
         className="relative w-full max-w-md p-8 overflow-hidden border shadow-2xl bg-slate-900/60 border-slate-800 rounded-3xl backdrop-blur-xl"
       >
         {/* Header */}
-       <div className="mb-8 text-center">
-  <img 
-    src="/logo02.png" 
-    alt="NetBank" 
-    className="object-contain h-16 mx-auto mb-6 drop-shadow-2xl" 
-  />
-  <h1 className="text-2xl font-bold text-white">Acesse sua conta</h1>
-  <p className="text-sm text-slate-400">Bem-vindo de volta ao futuro.</p>
-</div>
+        <div className="mb-8 text-center">
+          <img
+            src="/logo02.png"
+            alt="NetBank"
+            className="object-contain h-16 mx-auto mb-6 drop-shadow-2xl"
+          />
+          <h1 className="text-2xl font-bold text-white">Acesse sua conta</h1>
+          <p className="text-sm text-slate-400">
+            Bem-vindo de volta ao futuro.
+          </p>
+        </div>
 
         {/* Form */}
         <form onSubmit={handleLogin} className="space-y-6">

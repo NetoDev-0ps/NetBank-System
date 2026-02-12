@@ -185,15 +185,15 @@ function Painel() {
 
       <header className="sticky top-0 z-20 border-b shadow-lg bg-slate-900/80 backdrop-blur-md border-slate-800">
         <div className="flex items-center justify-between h-16 px-6 mx-auto max-w-7xl">
-         <div className="flex items-center gap-4">
-  <img 
-    src="/logo02.png" 
-    alt="NetBank Manager" 
-    className="object-contain w-auto h-9" 
-  />
+          <div className="flex items-center gap-4">
+            <img
+              src="/logo02.png"
+              alt="NetBank Manager"
+              className="object-contain w-auto h-9"
+            />
             <span className="hidden md:block px-2 py-0.5 text-[10px] font-bold tracking-widest text-blue-300 border border-blue-900 bg-blue-900/20 rounded uppercase">
-    Manager
-  </span>
+              Manager
+            </span>
           </div>
           <div className="flex items-center gap-4">
             <div className="hidden text-right sm:block">
