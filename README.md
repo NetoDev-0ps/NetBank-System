@@ -61,22 +61,36 @@ Suba o container do PostgreSQL em modo *detached*:
 ```bash
 cd database
 docker-compose up -d
-2️⃣ Back-end (API)
+```
+### 2️⃣ Back-end (API)
 Compile e execute a aplicação Spring Boot:
-
-Bash
+```bash
 cd backend
-# Windows
+```
+## Windows
+```bash
 mvnw spring-boot:run
-# Linux/Mac
+```
+## Linux/Mac
+```bash
 ./mvnw spring-boot:run
+```
 A API estará disponível em: http://localhost:8080
 
-3️⃣ Front-end (Interface)
+### 3️⃣ Front-end (Interface)
 Instale as dependências e inicie o servidor de desenvolvimento Vite:
-
-Bash
+```bash
 cd frontend
 npm install
 npm run dev
+```
 O App estará disponível em: http://localhost:5173
+
+### 🔑 Credenciais para Teste (Seed Data)
+
+Utilize as contas abaixo para explorar as diferentes permissões do sistema:
+
+| Perfil | Email | Senha |
+| :--- | :--- | :--- |
+| **Gerente (Admin)** | `admin@netbank.com.br` | `admin123` |
+| **Cliente** | *(Criar via tela de cadastro)* | *(Sua escolha)* |
