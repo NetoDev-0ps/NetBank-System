@@ -1,4 +1,4 @@
-package com.netomonteiro.bancodigital.dto;
+package com.netomonteiro.bancodigital.dto.request;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import lombok.Data;
 
 @Data
-public class TransferenciaDTO {
+public class TransferenciaRequest {
 
     @NotNull(message = "O ID de origem é obrigatório")
     private Long idOrigem;

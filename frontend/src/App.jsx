@@ -1,75 +1,51 @@
+import React from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import PropTypes from "prop-types";
-import Home from "./pages/Home";
-import LoginGerente from "./pages/LoginGerente";
-import LoginCliente from "./pages/LoginCliente";
-import CadastroCliente from "./pages/CadastroCliente";
-import Painel from "./pages/PainelGerente";
-import ClientDashboard from "./pages/ClientDashboard";
-import PixArea from "./pages/PixArea";
 
-// --- MANTER ESTE BLOCO ACIMA DA FUNCTION APP ---
+// Importações Globais (Caminhos Modulares)
+import ThemeToggle from "./shared/ui/ThemeToggle";
+import WindSense from "./shared/effects/WindFlowCanvas";
+
+// Importações de Páginas
+import HomePage from "./pages/home/HomePage";
+import ManagerLogin from "./pages/auth/ManagerLogin";
+import CustomerLoginPage from "./pages/auth/CustomerLoginPage";
+import RegistrationPage from "./pages/auth/RegistrationPage";
+import ManagerDashboardPage from "./pages/dashboard/ManagerDashboardPage";
+import CustomerDashboardPage from "./pages/dashboard/CustomerDashboardPage";
+import PixAreaPage from "./pages/dashboard/PixAreaPage";
+
 const RotaGerente = ({ children }) => {
-  const isLogado = localStorage.getItem("token") === "logado-como-gerente";
-  return isLogado ? children : <Navigate to="/login-gerente" />;
+  const token = localStorage.getItem("token");
+  const cargo = localStorage.getItem("usuario-cargo");
+  const isAutenticado = token === "logado-como-gerente" && (cargo === "GERENTE" || cargo === "ADMIN");
+  return isAutenticado ? children : <Navigate to="/login-gerente" replace />;
 };
 
-const RotaCliente = ({ children }) => {
-  const isLogado = localStorage.getItem("cliente_token") === "logado";
-  return isLogado ? children : <Navigate to="/login-cliente" />;
-};
-
-RotaGerente.propTypes = {
-  children: PropTypes.node.isRequired,
-};
-
-RotaCliente.propTypes = {
-  children: PropTypes.node.isRequired,
-};
+RotaGerente.propTypes = { children: PropTypes.node.isRequired };
 
 function App() {
-  const location = useLocation(); // Captura a mudança de URL para animar a saída
+  const location = useLocation();
 
   return (
-    // O AnimatePresence gerencia a animação de SAÍDA das rotas
-    <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
-        {/* Rotas Públicas */}
-        <Route path="/" element={<Home />} />
-        <Route path="/login-gerente" element={<LoginGerente />} />
-        <Route path="/login-cliente" element={<LoginCliente />} />
-        <Route path="/cadastro-cliente" element={<CadastroCliente />} />
+    <div className="min-h-screen transition-colors duration-500">
+      <ThemeToggle />
+      <WindSense />
 
-        {/* Rotas Protegidas (Gerente) */}
-        <Route
-          path="/painel"
-          element={
-            <RotaGerente>
-              <Painel />
-            </RotaGerente>
-          }
-        />
-
-        {/* Rotas Protegidas (Cliente) */}
-        <Route
-          path="/dashboard"
-          element={
-            <RotaCliente>
-              <ClientDashboard />
-            </RotaCliente>
-          }
-        />
-        <Route
-          path="/pix"
-          element={
-            <RotaCliente>
-              <PixArea />
-            </RotaCliente>
-          }
-        />
-      </Routes>
-    </AnimatePresence>
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login-gerente" element={<ManagerLogin />} />
+          <Route path="/login-cliente" element={<CustomerLoginPage />} />
+          <Route path="/cadastro-cliente" element={<RegistrationPage />} />
+          <Route path="/painel" element={<RotaGerente><ManagerDashboardPage /></RotaGerente>} />
+          <Route path="/dashboard" element={<CustomerDashboardPage />} />
+          <Route path="/area-pix" element={<PixAreaPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AnimatePresence>
+    </div>
   );
 }
 

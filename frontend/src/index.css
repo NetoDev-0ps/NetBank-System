@@ -2,6 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  background-color: #f9fafb;
+@layer base {
+  body {
+    /* Transição global de 500ms para suavidade executiva */
+    @apply transition-colors duration-500 ease-in-out antialiased;
+  }
+}
+
+/* Modo White: Sua cor exata #BFCEF5 */
+.light {
+  background-color: #BFCEF5;
+  color: #1e293b; /* Texto slate-800 para contraste perfeito no azul claro */
+}
+
+/* Modo Dark: Original */
+.dark {
+  background-color: #050505;
+  color: #ffffff;
+}
+
+/* Visibilidade do Vento WindSense */
+.light .wind-canvas {
+  opacity: 0.4; /* Aumentamos para o azul aparecer no fundo claro */
+}
+
+.dark .wind-canvas {
+  opacity: 0.6;
 }

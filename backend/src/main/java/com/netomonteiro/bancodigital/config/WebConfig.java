@@ -1,4 +1,4 @@
-package com.netomonteiro.bancodigital; // <--- Garanta que esse pacote está certo
+package com.netomonteiro.bancodigital.config; // <--- Garanta que esse pacote está certo
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;

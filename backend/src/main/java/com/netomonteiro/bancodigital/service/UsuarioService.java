@@ -1,99 +1,94 @@
 package com.netomonteiro.bancodigital.service;
 
-import com.netomonteiro.bancodigital.model.StatusConta;
 import com.netomonteiro.bancodigital.model.Usuario;
+import com.netomonteiro.bancodigital.model.enums.StatusConta;
 import com.netomonteiro.bancodigital.repository.UsuarioRepository;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.Period;
-import java.util.List;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.util.List;
+
 @Service
-@RequiredArgsConstructor // Gera o construtor para o 'final usuarioRepository' automaticamente
+@RequiredArgsConstructor
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
 
     public List<Usuario> listarTodos() {
         return usuarioRepository.findAll();
     }
 
+    public Usuario buscarPorId(Long id) {
+        return usuarioRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado."));
+    }
+
     @Transactional
     public Usuario criar(Usuario usuario) {
+        // Normalização de dados (Double Check)
+        usuario.setCpf(usuario.getCpf().replaceAll("\\D", ""));
+        if (usuario.getTelefone() != null) {
+            usuario.setTelefone(usuario.getTelefone().replaceAll("\\D", ""));
+        }
+
+        // Validação de Duplicidade (Evita erro 500 no banco)
         if (usuarioRepository.existsByCpf(usuario.getCpf())) {
-            throw new RuntimeException("Erro: CPF já cadastrado.");
-        }
-        if (usuarioRepository.existsByEmail(usuario.getEmail())) {
-            throw new RuntimeException("Erro: Email já em uso.");
+            throw new IllegalArgumentException("Este CPF já possui uma proposta em análise.");
         }
 
-        // Validação de Maioridade
-        if (usuario.getDataNascimento() != null) {
-            int idade = Period.between(usuario.getDataNascimento(), LocalDate.now()).getYears();
-            if (idade < 18) {
-                throw new RuntimeException("Erro: Apenas maiores de 18 anos.");
-            }
-        }
-
+        // Regras Iniciais de Negócio
+        usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
+        usuario.setSaldo(BigDecimal.ZERO);
         usuario.setStatus(StatusConta.PENDENTE);
-        usuario.setSaldo(BigDecimal.ZERO); // Inicializa com zero usando BigDecimal
+
         return usuarioRepository.save(usuario);
     }
 
-    public Usuario login(String cpf, String senha) {
-        // Busca indexada por CPF (Lógica O(1) no banco)
-        Usuario usuario = usuarioRepository
-            .findByCpf(cpf.replaceAll("\\D", ""))
-            .orElseThrow(() -> new RuntimeException("Usuário não encontrado."));
+    // ==========================================================
+    // ENGENHARIA DE LOGIN COM REGRAS DE STATUS
+    // ==========================================================
+    public Usuario loginPorEmail(String email, String senha) {
+    Usuario usuario = usuarioRepository.findByEmail(email.toLowerCase())
+            .orElseThrow(() -> new IllegalArgumentException("Credenciais inválidas."));
 
-        if (!usuario.getSenha().equals(senha)) {
-            throw new RuntimeException("Senha incorreta.");
-        }
-
-        // Validação de Status usando o Enum
-        if (usuario.getStatus() == StatusConta.PENDENTE) {
-            throw new RuntimeException("Conta em análise. Aguarde a aprovação.");
-        }
-        if (usuario.getStatus() != StatusConta.ATIVA) {
-            throw new RuntimeException(
-                "Conta com status: " + usuario.getStatus() + ". Acesso negado."
-            );
-        }
-
-        return usuario;
+    // Validação de Máquina de Estados
+    if (!usuario.getStatus().equals(StatusConta.ATIVA)) {
+        throw new IllegalArgumentException("Conta sem permissão de acesso. Status: " + usuario.getStatus());
     }
 
+    // Validação Criptográfica
+    if (!passwordEncoder.matches(senha, usuario.getSenha())) {
+        throw new IllegalArgumentException("Credenciais inválidas.");
+    }
+
+    return usuario;
+}
     @Transactional
-    public void depositar(Long id, BigDecimal valor) {
-        if (valor == null || valor.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new RuntimeException("O valor do depósito deve ser positivo.");
-        }
-
-        Usuario usuario = usuarioRepository
-            .findById(id)
-            .orElseThrow(() -> new RuntimeException("Usuário não encontrado."));
-
-        usuario.setSaldo(usuario.getSaldo().add(valor));
+    public void atualizarStatus(Long id, StatusConta novoStatus) {
+        Usuario usuario = buscarPorId(id);
+        usuario.setStatus(novoStatus);
         usuarioRepository.save(usuario);
     }
 
     @Transactional
-    public void atualizarStatus(Long id, StatusConta novoStatus) {
-        Usuario usuario = usuarioRepository
-            .findById(id)
-            .orElseThrow(() -> new RuntimeException("Usuário não encontrado."));
-
-        usuario.setStatus(novoStatus);
+    public void depositar(Long id, BigDecimal valor) {
+        if (valor.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("O valor do depósito deve ser maior que zero.");
+        }
+        Usuario usuario = buscarPorId(id);
+        usuario.setSaldo(usuario.getSaldo().add(valor));
         usuarioRepository.save(usuario);
     }
 
     @Transactional
     public void deletar(Long id) {
         if (!usuarioRepository.existsById(id)) {
-            throw new RuntimeException("Usuário não encontrado.");
+            throw new EntityNotFoundException("Usuário não encontrado.");
         }
         usuarioRepository.deleteById(id);
     }

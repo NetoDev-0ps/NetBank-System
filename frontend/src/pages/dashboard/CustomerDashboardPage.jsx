@@ -54,11 +54,23 @@ function ClientDashboard() {
   useEffect(() => {
     if (!usuario) {
       navigate("/login-cliente");
+      return;
+    }
+
+    // NOVA VALIDAÇÃO: Se o status for diferente de ACEITO, bloqueia
+    if (usuario.status !== "ACEITO") {
+      alert(
+        "Sua conta ainda está em análise. Por favor, aguarde a aprovação do gerente.",
+      );
+      localStorage.removeItem("cliente_dados"); // Limpa o "lixo" para não entrar em loop
+      localStorage.removeItem("cliente_token");
+      navigate("/login-cliente");
     }
   }, [usuario, navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem("cliente_token");
+    localStorage.removeItem("cliente_dados"); // ADICIONE ESTA LINHA
     navigate("/");
   };
 
