@@ -1,6 +1,8 @@
 # Changelog
 
-## [1.0.2] - 2026-03-05
+## [1.0.3] - 2026-03-05
+### Changed
+- Sincronizacao da documentacao de release para `v1.0.2` em README/checklist.`n- `scripts/release-tag.ps1` com versao padrao atualizada para `1.0.2`.`n`n## [1.0.2] - 2026-03-05
 ### Added
 - Pipeline de seguranca no GitHub:
   - `codeql.yml` (Java + JavaScript/TypeScript)
@@ -60,3 +62,5 @@
 - Primeiro acesso com retorno consistente de usuario atualizado.
 - Regras de status e acoes de gerente alinhadas entre front e backend.
 - Correcoes de textos com encoding quebrado em pontos criticos.
+
+

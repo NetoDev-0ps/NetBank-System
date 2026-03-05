@@ -45,10 +45,11 @@ Garantir que o projeto fique em estado de publicacao com operacao previsivel, te
 2. Rodar validacao completa:
    - `powershell -ExecutionPolicy Bypass -File scripts/validate-clean-machine.ps1`
 3. Criar tag:
-   - `powershell -ExecutionPolicy Bypass -File scripts/release-tag.ps1 -Version 1.0.1 -SkipChecks`
+   - `powershell -ExecutionPolicy Bypass -File scripts/release-tag.ps1 -Version 1.0.2 -SkipChecks`
 4. Push da branch e tags:
    - `git push origin main --tags`
 5. Publicar release no GitHub com resumo do `CHANGELOG.md`.
 
 ## Rollback
 Seguir `docs/runbooks/release-rollback.md`.
+

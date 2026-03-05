@@ -2,7 +2,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 param(
-  [string]$Version = "1.0.1",
+  [string]$Version = "1.0.2",
   [switch]$SkipChecks
 )
 
@@ -37,3 +37,4 @@ if ($LASTEXITCODE -ne 0) {
 
 Write-Host "[NetBank] Tag criada: $tag" -ForegroundColor Green
 Write-Host "Proximo passo: git push origin main --tags"
+

@@ -181,7 +181,7 @@ powershell -ExecutionPolicy Bypass -File scripts/validate-clean-machine.ps1
 
 ### Criar tag da release
 ```bash
-powershell -ExecutionPolicy Bypass -File scripts/release-tag.ps1 -Version 1.0.1 -SkipChecks
+powershell -ExecutionPolicy Bypass -File scripts/release-tag.ps1 -Version 1.0.2 -SkipChecks
 ```
 
 ### Publicar
@@ -194,4 +194,5 @@ git push origin main --tags
 - API: `https://SUA_API`
 - Health: `https://SUA_API/actuator/health`\n\n## Licenca
 MIT - ver arquivo [LICENSE](LICENSE).
+
 
