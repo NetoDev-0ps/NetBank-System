@@ -1,227 +1,397 @@
-import React from "react";
+﻿import React from "react";
 import { Link } from "react-router-dom";
-// eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
 import {
-  ArrowRight, Zap, CreditCard, Smartphone, TrendingUp, ChevronRight, Globe, MessageCircle, 
-  Instagram, 
-  Twitter, 
-  Linkedin, 
-  Youtube
+  ArrowRight,
+  BadgeCheck,
+  Building2,
+  CreditCard,
+  Headphones,
+  PiggyBank,
+  ShieldCheck,
+  Smartphone,
+  Sparkles,
+  WalletCards,
 } from "lucide-react";
-import WindFlow from "../../shared/effects/WindFlowCanvas"; 
+import WindFlow from "../../shared/effects/WindFlowCanvas";
+import T from "../../shared/ui/Translate";
 
-const Home = () => {
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.2 } },
-  };
+const premiumCards = [
+  {
+    icon: WalletCards,
+    title: "Conta digital completa",
+    description:
+      "Acompanhe seu saldo, organize seus gastos e resolva sua rotina financeira em poucos toques.",
+    image:
+      "https://images.unsplash.com/photo-1616077167599-cad3639c5a44?auto=format&fit=crop&w=1200&q=80",
+  },
+  {
+    icon: CreditCard,
+    title: "Cartão com controle total",
+    description:
+      "Visualize limite, ajuste preferências e acompanhe movimentações em tempo real no app.",
+    image:
+      "https://images.unsplash.com/photo-1563013544-824ae1b704d3?auto=format&fit=crop&w=1200&q=80",
+  },
+  {
+    icon: PiggyBank,
+    title: "Planejamento para crescer",
+    description:
+      "Metas, organização e uma experiência clara para quem quer cuidar melhor do dinheiro.",
+    image:
+      "https://images.unsplash.com/photo-1607861716497-e65ab29fc7ac?auto=format&fit=crop&w=1200&q=80",
+  },
+];
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 },
-  };
+const highlights = [
+  {
+    icon: ShieldCheck,
+    title: "Segurança ativa",
+    text: "Monitoramento e camadas de proteção para sua conta todos os dias.",
+  },
+  {
+    icon: Smartphone,
+    title: "App mobile-first",
+    text: "Navegação fluida para celular, com adaptação completa para desktop.",
+  },
+  {
+    icon: Headphones,
+    title: "Atendimento próximo",
+    text: "Suporte humanizado para ajudar você com rapidez quando precisar.",
+  },
+  {
+    icon: Building2,
+    title: "Soluções para empresa",
+    text: "Acesso empresarial para gestão de contas e acompanhamento operacional.",
+  },
+];
 
+const numbers = [
+  { label: "Clientes ativos", value: "+350 mil" },
+  { label: "Atendimentos resolvidos", value: "97%" },
+  { label: "Transações por mês", value: "+12 mi" },
+  { label: "Disponibilidade", value: "24h" },
+];
+
+const footerColumns = [
+  {
+    title: "Para você",
+    items: ["Conta digital", "Transferências", "Cartão", "Pix"],
+  },
+  {
+    title: "Para empresas",
+    items: ["Conta PJ", "Gestão operacional", "Painel empresarial", "Atendimento dedicado"],
+  },
+  {
+    title: "Banco NB",
+    items: ["Quem somos", "Carreiras", "Imprensa", "Parceiros"],
+  },
+  {
+    title: "Suporte",
+    items: ["Central de ajuda", "Fale conosco", "Ouvidoria", "Status da plataforma"],
+  },
+];
+
+const fadeUp = {
+  initial: { opacity: 0, y: 24 },
+  whileInView: { opacity: 1, y: 0 },
+  transition: { duration: 0.45 },
+  viewport: { once: true, margin: "-70px" },
+};
+
+function HomePage() {
   return (
-    /* CONTAINER PRINCIPAL: Agora reativo ao fundo #BFCEF5 (definido no index.css) */
-    <div className="min-h-screen overflow-x-hidden font-sans transition-colors duration-500 bg-[#BFCEF5] dark:bg-slate-950 text-slate-800 dark:text-white selection:bg-blue-500/30">
-      
-      {/* BACKGROUND ELEMENTS - ORIGINAIS */}
-      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+    <div className="nb-page">
+      <div className="fixed inset-0 pointer-events-none opacity-30">
         <WindFlow />
-        <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] bg-blue-600/10 dark:bg-blue-600/20 rounded-full blur-[120px] opacity-50" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-800/10 dark:bg-purple-600/10 rounded-full blur-[100px] opacity-40" />
       </div>
 
-      {/* NAVBAR - LOGO SEM ALTERAÇÃO DE COR */}
-      <nav className="relative z-50 flex items-center justify-between px-6 py-6 mx-auto max-w-7xl">
-        <div className="flex items-center gap-2">
-          <img src="/brand-logo-primary.png" alt="NetBank Logo" className="object-contain w-auto h-20 transition-opacity hover:opacity-90" />
-        </div>
+      <div className="nb-glow w-[420px] h-[420px] -top-24 -left-20 bg-brand-accent/20" />
+      <div className="nb-glow w-[460px] h-[460px] top-[38%] -right-28 bg-brand-primary/20" />
 
-        <div className="flex gap-4">
-          <Link to="/login-cliente" className="hidden px-5 py-2.5 text-sm font-bold transition border rounded-full md:block border-blue-800/20 dark:border-slate-700 hover:bg-white/20 dark:hover:bg-slate-800 text-blue-900 dark:text-slate-300">
-            Já sou cliente
-          </Link>
-          <Link to="/login-gerente" className="px-5 py-2.5 text-sm font-bold text-white transition bg-blue-600 rounded-full hover:bg-blue-500 shadow-lg shadow-blue-900/20">
-            Área Administrativa
-          </Link>
-        </div>
-      </nav>
+      <header className="nb-topbar">
+        <div className="nb-shell py-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <img src="/brand-logo-primary.png" alt="NetBank" className="h-9 w-auto" />
+            <span className="hidden md:inline text-[10px] uppercase tracking-[0.2em] font-black text-slate-500 dark:text-slate-300">
+              <T>Banco NB</T>
+            </span>
+          </div>
 
-     {/* HERO SECTION */}
-      <main className="relative z-10 px-6 pt-20 pb-0 mx-auto max-w-7xl md:pt-20">
-        
-        {/* WRAPPER FLEX ADICIONADO PARA PERMITIR LAYOUT LADO A LADO */}
-        <div className="flex flex-col items-center justify-between gap-12 lg:flex-row">
-          
-          {/* CÓDIGO ORIGINAL INTACTO */}
-          <motion.div variants={containerVariants} initial="hidden" animate="visible" className="relative z-10 max-w-3xl">
-            <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-3 py-1 mb-3 text-xs font-bold text-blue-800 uppercase border rounded-full dark:text-blue-400 bg-blue-500/10 dark:bg-blue-900/20 border-blue-400/20 dark:border-blue-800/50">
-              <Zap size={12} /> O Futuro é Agora
+          <div className="flex items-center gap-2">
+            <Link to="/login-cliente" className="nb-button-ghost !py-2.5 !px-4 text-[10px] sm:text-xs">
+              <T>Entrar</T>
+            </Link>
+            <Link to="/cadastro-cliente" className="nb-button-primary !py-2.5 !px-4 text-[10px] sm:text-xs">
+              <T>Abrir conta</T>
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <section className="nb-shell pt-10 pb-14 sm:pt-14 sm:pb-20">
+          <div className="grid gap-7 lg:grid-cols-[1.05fr,0.95fr] items-start">
+            <motion.div {...fadeUp} className="order-2 lg:order-1">
+              <span className="inline-flex items-center gap-2 px-3 py-2 rounded-full text-[10px] font-black tracking-[0.2em] uppercase border border-blue-200 bg-blue-50 text-brand-primary dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200">
+                <Sparkles size={14} />
+                <T>Nova experiência NetBank</T>
+              </span>
+
+              <h1 className="mt-5 text-slate-900 dark:text-white">
+                <T>Um banco digital feito</T>{" "}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-primary to-brand-accent">
+                  <T>para simplificar sua vida</T>
+                </span>
+              </h1>
+
+              <p className="mt-4 max-w-2xl text-sm sm:text-base text-slate-600 dark:text-slate-300">
+                <T>
+                  No NetBank você abre conta, acompanha seu dinheiro e resolve tudo em poucos passos, com uma experiência leve, clara e confiável.
+                </T>
+              </p>
+
+              <div className="mt-7 flex flex-col sm:flex-row gap-3">
+                <Link to="/cadastro-cliente" className="nb-button-primary w-full sm:w-auto">
+                  <T>Quero abrir minha conta</T>
+                  <ArrowRight size={16} />
+                </Link>
+                <Link to="/login-cliente" className="nb-button-secondary w-full sm:w-auto">
+                  <T>Já sou cliente</T>
+                </Link>
+                <Link to="/login-gerente" className="nb-button-ghost w-full sm:w-auto">
+                  <T>Acesso empresarial</T>
+                </Link>
+              </div>
+
+              <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {numbers.map((item) => (
+                  <div key={item.label} className="nb-card-soft p-3 sm:p-4">
+                    <p className="text-[10px] uppercase tracking-widest font-black text-slate-500 dark:text-slate-300">
+                      <T>{item.label}</T>
+                    </p>
+                    <p className="mt-1 text-sm sm:text-base font-black text-slate-800 dark:text-slate-100">{item.value}</p>
+                  </div>
+                ))}
+              </div>
             </motion.div>
-            
-            <motion.h1 variants={itemVariants} className="py-8 mb-6 text-5xl font-extrabold leading-snug tracking-tight text-transparent md:text-7xl bg-clip-text bg-gradient-to-r from-blue-900 via-blue-700 to-blue-500 dark:from-white dark:via-slate-200 dark:to-slate-500">
-              O banco que <br /> joga a seu favor.
-            </motion.h1>
 
-            <motion.p variants={itemVariants} className="max-w-xl mb-10 text-lg font-medium leading-relaxed text-blue-900/70 dark:text-slate-400 md:text-xl">
-              Sem taxas abusivas, sem filas e com a segurança que você merece. Controle sua vida financeira com a simplicidade de um toque.
-            </motion.p>
+            <motion.div {...fadeUp} className="order-1 lg:order-2 nb-card p-4 sm:p-5 overflow-hidden">
+              <div className="relative overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800">
+                <img
+                  src="https://images.unsplash.com/photo-1601597111158-2fceff292cdc?auto=format&fit=crop&w=1400&q=80"
+                  alt="Cliente utilizando aplicativo bancário"
+                  className="w-full h-[280px] sm:h-[360px] object-cover"
+                />
+                <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-slate-950/80 via-slate-900/35 to-transparent text-white">
+                  <p className="text-[10px] uppercase tracking-[0.2em] font-black text-blue-100">
+                    <T>Conta, cartão e transferências</T>
+                  </p>
+                  <p className="mt-1 text-sm sm:text-base font-bold">
+                    <T>Controle financeiro no seu ritmo, direto no app</T>
+                  </p>
+                </div>
+              </div>
 
-            <motion.div variants={itemVariants} className="flex flex-col gap-4 sm:flex-row">
-              <Link to="/cadastro-cliente" className="flex items-center justify-center gap-2 px-8 py-4 text-lg font-bold text-white transition bg-blue-600 shadow-xl rounded-2xl hover:bg-blue-500 hover:scale-105 active:scale-95 shadow-blue-900/20">
-                Começar agora <ArrowRight size={20} />
-              </Link>
-              <Link to="/login-cliente" className="flex items-center justify-center gap-2 px-8 py-4 text-lg font-bold text-blue-900 transition border rounded-2xl border-blue-900/20 dark:border-slate-700 hover:bg-white/30 dark:hover:bg-slate-800 dark:text-slate-300">
-                Acessar conta
-              </Link>
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <div className="nb-card-soft p-3">
+                  <div className="w-9 h-9 rounded-xl bg-brand-primary text-white flex items-center justify-center">
+                    <BadgeCheck size={17} />
+                  </div>
+                  <p className="mt-2 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-200">
+                    <T>Proteção contínua</T>
+                  </p>
+                </div>
+                <div className="nb-card-soft p-3">
+                  <div className="w-9 h-9 rounded-xl bg-brand-primary text-white flex items-center justify-center">
+                    <Smartphone size={17} />
+                  </div>
+                  <p className="mt-2 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-200">
+                    <T>Jornada sem fricção</T>
+                  </p>
+                </div>
+              </div>
             </motion.div>
-          </motion.div>
+          </div>
+        </section>
 
-          {/* NOVA ÁREA: ANIMAÇÃO DOS MASCOTES 3D */}
-          <motion.div 
-            initial={{ opacity: 0, x: 50 }} 
-            animate={{ opacity: 1, x: 0 }} 
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="relative z-10 hidden w-full max-w-md lg:block xl:max-w-lg lg:ml-auto"
-          >
-            <motion.img 
-              src="/business-people.png" /* Ajuste para o caminho/nome exato do seu arquivo na pasta public */
-              alt="Mascotes NetBank" 
-              className="w-full h-auto drop-shadow-2xl"
-              animate={{ y: [0, -18, 0] }} // Animação de flutuação no eixo Y
-              transition={{ 
-                repeat: Infinity, 
-                duration: 5, 
-                ease: "easeInOut" 
-              }}
-            />
-          </motion.div>
+        <section className="nb-shell pb-14 sm:pb-20">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {highlights.map((item) => {
+              const Icon = item.icon;
 
-        </div>
-        
-        {/* SECTION IPHONES (Original - Continua abaixo) */}
-        <section className="mt-32 text-center">
-          <motion.div initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
-            <h2 className="pb-1 text-4xl font-extrabold tracking-tight text-blue-950 dark:text-white md:text-6xl">
-              Tudo que você precisa. <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-blue-700">Em um só app.</span>
-            </h2>
+              return (
+                <motion.article key={item.title} {...fadeUp} className="nb-card p-5">
+                  <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950/40 text-brand-primary dark:text-brand-accent flex items-center justify-center">
+                    <Icon size={20} />
+                  </div>
+                  <h2 className="mt-4 !text-[1.1rem] text-slate-900 dark:text-white">
+                    <T>{item.title}</T>
+                  </h2>
+                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                    <T>{item.text}</T>
+                  </p>
+                </motion.article>
+              );
+            })}
+          </div>
+        </section>
 
-            <div className="relative mt-1 group">
-              <div className="absolute inset-0 bg-blue-600/10 dark:bg-blue-600/20 blur-[120px] rounded-full opacity-60" />
-              <img src="/app-interface-mockup.png" alt="App NetBank" className="relative z-10 w-full max-w-5xl mx-auto drop-shadow-2xl transition-transform duration-700 hover:scale-[1.01]" />
+        <section className="nb-shell pb-14 sm:pb-20">
+          <motion.div {...fadeUp} className="nb-card p-5 sm:p-8">
+            <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5 mb-6">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500 dark:text-slate-400">
+                  <T>Produtos para o seu momento</T>
+                </p>
+                <h2 className="mt-2 text-slate-900 dark:text-white">
+                  <T>Soluções com visual premium e uso prático</T>
+                </h2>
+              </div>
+              <Link to="/cadastro-cliente" className="nb-button-secondary w-full lg:w-auto">
+                <T>Começar agora</T>
+                <ArrowRight size={16} />
+              </Link>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-3">
+              {premiumCards.map((item) => {
+                const Icon = item.icon;
+
+                return (
+                  <article key={item.title} className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                    <img src={item.image} alt={item.title} className="w-full h-44 object-cover" />
+                    <div className="p-4 sm:p-5">
+                      <div className="w-9 h-9 rounded-xl bg-brand-primary text-white flex items-center justify-center">
+                        <Icon size={17} />
+                      </div>
+                      <h3 className="mt-3 text-base font-black text-slate-900 dark:text-white">
+                        <T>{item.title}</T>
+                      </h3>
+                      <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                        <T>{item.description}</T>
+                      </p>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           </motion.div>
         </section>
 
-        {/* SECTION CARDS - Usando bg-white/40 no modo claro para refletir o azul de fundo */}
-        <section className="pb-12 border-t mb-14 border-blue-900/10 dark:border-slate-900/50">
-          <motion.div initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }} className="grid grid-cols-1 gap-12 mt-12 md:grid-cols-3 md:gap-8">
-            <BigFeatureCard icon={<CreditCard size={40} />} title="Cartão de crédito" desc="Sem anuidade e com programa de pontos que nunca expiram." linkText="Conhecer cartões" />
-            <BigFeatureCard icon={<Smartphone size={40} />} title="Conta digital" desc="Pix e transferências ilimitadas. Pague boletos e muito mais." linkText="Abra sua conta" />
-            <BigFeatureCard icon={<TrendingUp size={40} />} title="Investimentos" desc="Acesse os melhores produtos do mercado com poucos cliques." linkText="Conhecer investimentos" />
+        <section className="nb-shell pb-16 sm:pb-24">
+          <motion.div {...fadeUp} className="nb-card overflow-hidden">
+            <div className="grid lg:grid-cols-[1fr,1.2fr]">
+              <div className="p-6 sm:p-8 bg-gradient-to-br from-brand-primary to-brand-secondary text-white">
+                <p className="text-[10px] uppercase tracking-[0.2em] font-black text-blue-100">
+                  <T>App NetBank</T>
+                </p>
+                <h2 className="mt-3">
+                  <T>Controle sua vida financeira onde estiver</T>
+                </h2>
+                <p className="mt-4 text-sm text-blue-100/90">
+                  <T>
+                    Pague, transfira e acompanhe tudo em uma experiência que funciona bem no celular e no desktop.
+                  </T>
+                </p>
+                <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                  <Link to="/login-cliente" className="nb-button-secondary !border-white/30 !text-white !bg-white/10 hover:!bg-white/20">
+                    <T>Entrar no aplicativo</T>
+                  </Link>
+                  <Link to="/cadastro-cliente" className="nb-button-primary">
+                    <T>Abrir conta</T>
+                    <ArrowRight size={16} />
+                  </Link>
+                </div>
+              </div>
+
+              <div className="p-6 sm:p-8 bg-slate-50 dark:bg-slate-900">
+                <img
+                  src="https://images.unsplash.com/photo-1556742049-908e76bada09?auto=format&fit=crop&w=1400&q=80"
+                  alt="Cliente fazendo pagamento digital"
+                  className="w-full h-[280px] sm:h-[340px] object-cover rounded-2xl border border-slate-200 dark:border-slate-700"
+                />
+              </div>
+            </div>
           </motion.div>
         </section>
       </main>
 
-      <FooterPremium />
+      <footer className="relative border-t border-slate-200/80 dark:border-slate-800 bg-gradient-to-b from-[#102140] to-[#071227] text-blue-100">
+        <div className="nb-shell pt-12 pb-6">
+          <div className="rounded-3xl border border-white/15 bg-white/5 backdrop-blur p-5 sm:p-7 mb-8">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.2em] font-black text-blue-200/80">
+                  <T>Banco NB</T>
+                </p>
+                <h2 className="mt-2 text-white">
+                  <T>Pronto para começar sua jornada financeira?</T>
+                </h2>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link to="/login-cliente" className="nb-button-secondary !border-white/30 !text-white !bg-white/10 hover:!bg-white/20">
+                  <T>Entrar como cliente</T>
+                </Link>
+                <Link to="/cadastro-cliente" className="nb-button-primary">
+                  <T>Abrir conta agora</T>
+                  <ArrowRight size={16} />
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-[1.2fr,1fr,1fr,1fr,1fr]">
+            <div>
+              <img src="/brand-logo-primary.png" alt="NetBank" className="h-10 w-auto" />
+              <p className="mt-4 text-sm text-blue-100/80 max-w-xs">
+                <T>
+                  Um banco digital para quem busca praticidade, confiança e atendimento próximo todos os dias.
+                </T>
+              </p>
+              <p className="mt-3 text-xs text-blue-200/70">contato@netbank.com.br</p>
+              <p className="text-xs text-blue-200/70">+55 (11) 4000-2026</p>
+            </div>
+
+            {footerColumns.map((column) => (
+              <div key={column.title}>
+                <p className="text-xs font-black tracking-widest uppercase text-blue-200/90">
+                  <T>{column.title}</T>
+                </p>
+                <ul className="mt-3 space-y-2">
+                  {column.items.map((item) => (
+                    <li key={item}>
+                      <span className="text-sm text-blue-100/80">
+                        <T>{item}</T>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-8 pt-5 border-t border-white/15 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-blue-200/70">
+            <p>
+              <T>2026 NetBank S.A. Todos os direitos reservados.</T>
+            </p>
+            <div className="flex items-center gap-4">
+              <span>
+                <T>Privacidade</T>
+              </span>
+              <span>
+                <T>Termos</T>
+              </span>
+              <span>
+                <T>Transparência</T>
+              </span>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
-};
+}
 
-// CARD COMPONENTE
-const BigFeatureCard = ({ icon, title, desc, linkText }) => (
-  <div className="flex flex-col items-center text-center group">
-    <div className="p-6 mb-6 text-blue-700 transition-all border rounded-3xl bg-white/40 dark:bg-slate-900/50 border-blue-900/10 dark:border-slate-800 group-hover:border-blue-500 dark:text-slate-300">
-      {icon}
-    </div>
-    <h3 className="mb-4 text-2xl font-bold text-blue-950 dark:text-white">{title}</h3>
-    <p className="max-w-sm mx-auto mb-8 leading-relaxed text-blue-900/70 dark:text-slate-400">{desc}</p>
-    <a href="#" className="flex items-center gap-2 font-bold text-blue-600 transition-colors">
-      {linkText} <ChevronRight size={16} />
-    </a>
-  </div>
-);
-
-// FOOTER PRESERVADO
-const FooterPremium = () => (
-  // Adicione estas importações no topo do seu Home.jsx junto com os outros ícones da lucide-react:
-// import { Instagram, Twitter, MessageCircle, Linkedin, Youtube } from "lucide-react";(
-  // O background utiliza o valor arbitrário #B1C0F5 para o modo claro e slate-800 para o modo escuro.
-  <footer className="pt-20 pb-12 font-sans border-t bg-[#B1C0F5] dark:bg-slate-800 border-blue-900/10 dark:border-slate-900 text-blue-900/70 dark:text-slate-300">
-    <div className="px-6 mx-auto max-w-7xl">
-      
-      {/* Grid de Links Principal */}
-      <div className="grid grid-cols-2 gap-10 mb-16 md:grid-cols-4 lg:grid-cols-5">
-        
-        <div className="flex flex-col gap-4">
-          <h4 className="text-xs font-bold tracking-widest uppercase text-slate-800 dark:text-white">NetBank</h4>
-          {["Sobre Nós", "Carreiras", "Imprensa", "Sustentabilidade"].map(link => (
-            <a key={link} href="#" className="text-sm transition-colors hover:text-blue-700 dark:hover:text-blue-400">{link}</a>
-          ))}
-        </div>
-
-        <div className="flex flex-col gap-4">
-          <h4 className="text-xs font-bold tracking-widest uppercase text-slate-800 dark:text-white">Nossos Produtos</h4>
-          {["Conta Corrente", "Cartões de Crédito", "Empréstimos", "Investimentos"].map(link => (
-            <a key={link} href="#" className="text-sm transition-colors hover:text-blue-700 dark:hover:text-blue-400">{link}</a>
-          ))}
-        </div>
-
-        <div className="flex flex-col gap-4">
-          <h4 className="text-xs font-bold tracking-widest uppercase text-slate-800 dark:text-white">Ajuda & Suporte</h4>
-          {["Central de Ajuda", "Segurança", "Ouvidoria", "Taxas e Tarifas"].map(link => (
-            <a key={link} href="#" className="text-sm transition-colors hover:text-blue-700 dark:hover:text-blue-400">{link}</a>
-          ))}
-        </div>
-
-        <div className="flex flex-col col-span-2 gap-4 md:col-span-1 lg:col-span-2">
-          <h4 className="text-xs font-bold tracking-widest uppercase text-slate-800 dark:text-white">Canais de Atendimento</h4>
-          <div className="mb-2">
-            <p className="mb-1 text-xs tracking-wider uppercase opacity-80">Capitais e regiões metropolitanas</p>
-            <p className="text-base font-bold text-blue-800 dark:text-blue-400">3003 4070</p>
-          </div>
-          <div>
-            <p className="mb-1 text-xs tracking-wider uppercase opacity-80">Demais localidades</p>
-            <p className="text-base font-bold text-blue-800 dark:text-blue-400">0800 940 0007</p>
-          </div>
-        </div>
-
-      </div>
-
-      {/* Linha Inferior: Copyright e Redes Sociais */}
-      <div className="flex flex-col-reverse items-center justify-between gap-6 pt-8 mt-16 border-t md:flex-row border-blue-900/10 dark:border-slate-700/50">
-        
-        <div className="text-xs font-medium text-center md:text-left text-blue-900/60 dark:text-slate-500">
-          © 2026 NetBank S.A. CNPJ: 00.000.000/0001-00 <br className="block md:hidden" />
-          <span className="hidden md:inline"> | </span> Av. Paulista, 1000 - São Paulo, SP
-        </div>
-
-        {/* Grupo de Ícones Sociais */}
-        <div className="flex items-center gap-4">
-          <a href="#" aria-label="WhatsApp" className="p-2 transition-all rounded-full bg-blue-900/5 dark:bg-slate-700/50 hover:bg-green-500 hover:text-white dark:hover:bg-green-500 hover:scale-110">
-             {/* Usando MessageCircle provisoriamente para WhatsApp caso não tenha o icone especifico */}
-            <MessageCircle size={20} />
-          </a>
-          <a href="#" aria-label="Instagram" className="p-2 transition-all rounded-full bg-blue-900/5 dark:bg-slate-700/50 hover:bg-pink-600 hover:text-white dark:hover:bg-pink-600 hover:scale-110">
-            <Instagram size={20} />
-          </a>
-          <a href="#" aria-label="X (Twitter)" className="p-2 transition-all rounded-full bg-blue-900/5 dark:bg-slate-700/50 hover:bg-black hover:text-white dark:hover:bg-black hover:scale-110">
-            <Twitter size={20} /> 
-          </a>
-          <a href="#" aria-label="LinkedIn" className="p-2 transition-all rounded-full bg-blue-900/5 dark:bg-slate-700/50 hover:bg-blue-700 hover:text-white dark:hover:bg-blue-700 hover:scale-110">
-            <Linkedin size={20} />
-          </a>
-          <a href="#" aria-label="YouTube" className="p-2 transition-all rounded-full bg-blue-900/5 dark:bg-slate-700/50 hover:bg-red-600 hover:text-white dark:hover:bg-red-600 hover:scale-110">
-            <Youtube size={20} />
-          </a>
-        </div>
-
-      </div>
-    </div>
-  </footer>
-);
-
-export default Home;
+export default HomePage;

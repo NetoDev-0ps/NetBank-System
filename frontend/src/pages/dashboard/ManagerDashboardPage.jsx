@@ -1,203 +1,312 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import { LogOut, RotateCcw, Search } from "lucide-react";
 import api from "../../core/api/apiClient";
-import { useNavigate } from "react-router-dom";
-// eslint-disable-next-line no-unused-vars
-import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Wallet, Check, X, LogOut, Clock, UserCheck, 
-  ChevronDown, Trash2, Search, TrendingUp, Users 
-} from "lucide-react";
-
-// IMPORTAÇÃO DOS COMPONENTES QUE VOCÊ ENVIOU
-import WindSense from "../../shared/effects/WindFlowCanvas"; 
-import Notification from "../../shared/ui/Notification";
-import DepositModal from "../../shared/modals/DepositModal";
+import { useAuth } from "../../core/contexts/AuthContext";
+import WindSense from "../../shared/effects/WindFlowCanvas";
 import ConfirmationModal from "../../shared/modals/ConfirmationModal";
+import Notification from "../../shared/ui/Notification";
+import T from "../../shared/ui/Translate";
+import ManagerStatsGrid from "./manager/ManagerStatsGrid";
+import ManagerUsersTable from "./manager/ManagerUsersTable";
+import { mapManagerApiError } from "./manager/managerDashboard.constants";
 
-function Painel() {
-  const navigate = useNavigate();
+const PAGE_SIZE = 12;
+
+const EMPTY_STATS = {
+  total: 0,
+  ativos: 0,
+  pendentes: 0,
+  suspensas: 0,
+  bloqueadas: 0,
+  recusadas: 0,
+};
+
+function ManagerDashboardPage() {
   const [usuarios, setUsuarios] = useState([]);
   const [clienteAberto, setClienteAberto] = useState(null);
   const [busca, setBusca] = useState("");
+  const [buscaDebounced, setBuscaDebounced] = useState("");
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [mostrarRecusados, setMostrarRecusados] = useState(false);
 
-  const [adminInfo] = useState(() => ({
-    nome: localStorage.getItem("usuario-nome") || "Gerente",
-    email: localStorage.getItem("usuario-email") || "admin@netbank.com.br",
-  }));
+  const [stats, setStats] = useState(EMPTY_STATS);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
 
   const [notificacao, setNotificacao] = useState({ msg: "", type: "" });
-  const [modalDeposito, setModalDeposito] = useState({ open: false, userId: null, nome: "" });
-  const [modalExclusao, setModalExclusao] = useState({ open: false, id: null });
+  const [statusEmAtualizacao, setStatusEmAtualizacao] = useState(null);
+  const [deletando, setDeletando] = useState(false);
+  const [modalExclusao, setModalExclusao] = useState({
+    open: false,
+    id: null,
+    nome: "",
+  });
 
-  const carregarUsuarios = async () => {
+  const { managerUser, logout } = useAuth();
+  const adminInfo = {
+    nome: managerUser?.nome || "Gerente",
+    email: managerUser?.email || "admin@netbank.com.br",
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setBuscaDebounced(busca.trim());
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [busca]);
+
+  const carregarUsuarios = useCallback(
+    async (nextPage = 0) => {
+      try {
+        setLoading(true);
+        setLoadError("");
+
+        const response = await api.get("/usuarios/paginado", {
+          params: {
+            page: nextPage,
+            size: PAGE_SIZE,
+            busca: buscaDebounced || undefined,
+            incluirRecusadas: mostrarRecusados,
+          },
+        });
+
+        const payload = response.data || {};
+        setUsuarios(Array.isArray(payload.items) ? payload.items : []);
+        setStats(payload.stats || EMPTY_STATS);
+        setPage(Number.isInteger(payload.page) ? payload.page : nextPage);
+        setTotalPages(Number.isInteger(payload.totalPages) ? payload.totalPages : 0);
+        setTotalElements(Number.isInteger(payload.totalElements) ? payload.totalElements : 0);
+      } catch (error) {
+        const mensagem = mapManagerApiError(
+          error,
+          "Falha ao sincronizar usuarios com o servidor.",
+        );
+        setLoadError(mensagem);
+        setNotificacao({ msg: mensagem, type: "error" });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [buscaDebounced, mostrarRecusados],
+  );
+
+  useEffect(() => {
+    carregarUsuarios(0);
+  }, [carregarUsuarios]);
+
+  const alterarStatus = async (id, novoStatus) => {
     try {
-      setLoading(true);
-      const response = await api.get("/usuarios");
-      setUsuarios(response.data);
-    } catch (err) {
-      setNotificacao({ msg: "Falha na sincronização Core.", type: "error" });
+      setStatusEmAtualizacao(id);
+      await api.patch(`/usuarios/${id}/status`, { status: novoStatus });
+      setNotificacao({
+        msg: `Status atualizado para ${novoStatus}.`,
+        type: "success",
+      });
+      await carregarUsuarios(page);
+    } catch (error) {
+      setNotificacao({
+        msg: mapManagerApiError(error, "Nao foi possivel atualizar o status."),
+        type: "error",
+      });
     } finally {
-      setLoading(false);
+      setStatusEmAtualizacao(null);
     }
   };
 
-  useEffect(() => { carregarUsuarios(); }, []);
-
-  // FILTRAGEM DE GESTÃO: Remove Administradores (como o Neto Manager) da lista
-  const { pendentes, ativos, estatisticas } = useMemo(() => {
-    const termo = busca.toLowerCase().trim();
-    const apenasClientes = usuarios.filter(u => u.cargo === "CLIENTE");
-
-    const filtrados = apenasClientes.filter(u =>
-      u.nome.toLowerCase().includes(termo) || u.cpf.includes(termo)
-    );
-
-    return {
-      pendentes: filtrados.filter(u => u.status === "PENDENTE"),
-      ativos: filtrados.filter(u => u.status !== "PENDENTE"),
-      estatisticas: {
-        total: apenasClientes.length,
-        liquidez: apenasClientes.reduce((acc, curr) => acc + curr.saldo, 0),
-        aguardando: apenasClientes.filter(u => u.status === "PENDENTE").length
-      }
-    };
-  }, [usuarios, busca]);
-
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate("/", { replace: true });
+  const abrirModalExclusao = (usuario) => {
+    setModalExclusao({
+      open: true,
+      id: usuario.id,
+      nome: usuario.nome || "cliente",
+    });
   };
 
-  if (loading) return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-950">
-      <div className="w-12 h-12 border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
-    </div>
-  );
+  const deletarUsuario = async (id) => {
+    if (!id) return;
+
+    try {
+      setDeletando(true);
+      await api.delete(`/usuarios/${id}`);
+      setNotificacao({ msg: "Cliente excluido com sucesso.", type: "success" });
+      setModalExclusao({ open: false, id: null, nome: "" });
+      await carregarUsuarios(Math.max(0, page));
+    } catch (error) {
+      setNotificacao({
+        msg: mapManagerApiError(error, "Nao foi possivel excluir o cliente."),
+        type: "error",
+      });
+    } finally {
+      setDeletando(false);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (page <= 0) return;
+    carregarUsuarios(page - 1);
+  };
+
+  const handleNextPage = () => {
+    if (page + 1 >= totalPages) return;
+    carregarUsuarios(page + 1);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#CFF3F8] dark:bg-slate-950">
+        <div className="w-10 h-10 border-4 border-blue-600 rounded-full border-t-transparent animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen overflow-x-hidden font-sans text-white bg-slate-950 selection:bg-blue-500/30">
-      
-      {/* CAMADA DE FUNDO: Efeito Vento + Orbes (Baseado na sua Home.jsx) */}
-      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-        <WindSense /> 
-        <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[120px] opacity-50" /> [cite: 275]
-        <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-900/5 rounded-full blur-[100px] opacity-30" /> [cite: 276]
+    <div className="min-h-screen font-sans transition-colors bg-[#CFF3F8] dark:bg-slate-950 text-slate-800 dark:text-slate-200">
+      <div className="fixed inset-0 z-0 pointer-events-none opacity-30">
+        <WindSense />
       </div>
 
-      <Notification 
-        message={notificacao.msg} type={notificacao.type} 
-        onClose={() => setNotificacao({ msg: "", type: "" })} 
-      />
+      <div className="fixed top-20 left-0 right-0 z-[100] flex justify-center pointer-events-none">
+        <div className="pointer-events-auto">
+          <Notification
+            message={notificacao.msg}
+            type={notificacao.type}
+            onClose={() => setNotificacao({ msg: "", type: "" })}
+          />
+        </div>
+      </div>
 
-      {/* HEADER EXECUTIVO */}
-      <header className="relative z-50 border-b bg-slate-950/50 backdrop-blur-xl border-white/[0.05]">
-        <div className="flex items-center justify-between px-8 py-6 mx-auto max-w-7xl">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-10 h-10 bg-blue-600 shadow-lg rounded-xl shadow-blue-900/40">
-              <Wallet className="text-white" size={20} />
-            </div>
-            <div>
-              <h1 className="text-xs font-black tracking-[0.4em] uppercase">NetBank <span className="text-blue-500">Admin</span></h1>
-              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{adminInfo.nome}</p>
-            </div>
+      <header className="relative z-[90] bg-white border-b shadow-sm dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between px-4 sm:px-6 py-5 mx-auto max-w-7xl">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+              <T>Painel Administrativo</T>
+            </p>
+            <h1 className="text-2xl font-black text-slate-900 dark:text-white">
+              NetBank - Gerencia
+            </h1>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              {adminInfo.nome} - {adminInfo.email}
+            </p>
           </div>
-          <button onClick={handleLogout} className="px-6 py-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase border rounded-full border-white/10 hover:bg-red-500/10 hover:text-red-500 transition-all">
-            Logout
-          </button>
+
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <button
+              onClick={() => carregarUsuarios(page)}
+              className="flex items-center gap-2 px-4 py-3 text-xs font-black tracking-widest uppercase transition border rounded-2xl bg-white/80 border-slate-200 text-slate-700 hover:bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200"
+            >
+              <RotateCcw size={16} />
+              <T>Atualizar</T>
+            </button>
+
+            <button
+              onClick={() => logout("/home")}
+              className="flex items-center gap-2 px-4 py-3 text-xs font-black tracking-widest text-white uppercase transition bg-rose-600 rounded-2xl hover:bg-rose-500"
+            >
+              <LogOut size={16} />
+              <T>Sair</T>
+            </button>
+          </div>
         </div>
       </header>
 
-      <main className="relative z-10 px-8 py-12 mx-auto max-w-7xl">
-        {/* KPI SECTION */}
-        <div className="grid grid-cols-1 gap-6 mb-12 md:grid-cols-3">
-          {[
-            { label: "Liquidez Core", val: estatisticas.liquidez, icon: TrendingUp },
-            { label: "Clientes Ativos", val: estatisticas.total, icon: Users },
-            { label: "Pendências", val: estatisticas.aguardando, icon: Clock }
-          ].map((kpi, i) => (
-            <div key={i} className="p-8 border bg-slate-900/40 border-white/[0.05] rounded-3xl backdrop-blur-md">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{kpi.label}</span>
-                <kpi.icon size={16} className="text-blue-500" />
+      <main className="relative z-10 px-4 sm:px-6 py-6 sm:py-8 mx-auto max-w-7xl">
+        {loadError && (
+          <div className="p-4 mb-6 border rounded-2xl bg-white/80 border-rose-500/30 text-rose-700 dark:bg-rose-500/10 dark:border-rose-500/20 dark:text-rose-200">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-rose-600 dark:text-rose-300">
+                  <T>Falha de sincronizacao</T>
+                </p>
+                <p className="mt-1 text-sm">{loadError}</p>
               </div>
-              <p className="text-2xl italic font-light">
-                {kpi.label.includes("Liquidez") ? `R$ ${kpi.val.toLocaleString()}` : kpi.val}
-              </p>
+              <button
+                onClick={() => carregarUsuarios(page)}
+                className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white bg-rose-600 rounded-xl hover:bg-rose-500 transition"
+              >
+                <T>Tentar novamente</T>
+              </button>
             </div>
-          ))}
-        </div>
+          </div>
+        )}
 
-        {/* LISTAGEM PRINCIPAL */}
-        <section className="border bg-slate-900/30 border-white/[0.05] rounded-[2.5rem] overflow-hidden backdrop-blur-lg">
-          <div className="flex items-center justify-between p-8 border-b border-white/[0.05]">
-             <h2 className="text-[10px] font-black tracking-[0.3em] uppercase flex items-center gap-3">
-                <UserCheck size={18} className="text-blue-500" /> Gestão de Contas
-             </h2>
-             <div className="relative">
-                <Search className="absolute -translate-y-1/2 left-4 top-1/2 text-slate-600" size={14} />
-                <input 
-                  type="text" placeholder="Buscar por CPF ou Nome..." value={busca} onChange={(e) => setBusca(e.target.value)}
-                  className="bg-black/40 border border-white/10 rounded-full py-2.5 pl-12 pr-6 text-xs text-white outline-none focus:border-blue-500/50 w-80 transition-all"
-                />
-             </div>
+        <ManagerStatsGrid stats={stats} />
+
+        <div className="flex flex-col gap-4 mb-6 md:flex-row md:items-center md:justify-between">
+          <div className="relative flex-1">
+            <Search
+              size={18}
+              className="absolute -translate-y-1/2 left-4 top-1/2 text-slate-400"
+            />
+            <input
+              value={busca}
+              onChange={(event) => setBusca(event.target.value)}
+              placeholder="Buscar por nome, e-mail ou CPF..."
+              className="w-full py-4 pl-12 pr-4 text-sm border outline-none bg-white/80 border-slate-200 rounded-2xl dark:bg-slate-900 dark:border-slate-800 dark:text-white"
+            />
           </div>
 
-          <table className="w-full text-left">
-            <thead>
-              <tr className="text-[9px] font-bold text-slate-500 uppercase tracking-widest border-b border-white/[0.02]">
-                <th className="px-8 py-6">Cliente</th>
-                <th className="px-8 py-6">Status</th>
-                <th className="px-8 py-6">Saldo</th>
-                <th className="px-8 py-6"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/[0.02]">
-              {ativos.map((u) => (
-                <tr key={u.id} className="hover:bg-white/[0.02] transition-colors group">
-                  <td className="px-8 py-6">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-bold text-white transition-colors group-hover:text-blue-400">{u.nome}</span>
-                      <span className="text-[9px] font-mono text-slate-600">{u.email}</span>
-                    </div>
-                  </td>
-                  <td className="px-8 py-6">
-                    <span className={`px-3 py-1 rounded-full text-[8px] font-black border ${
-                      u.status === 'ATIVA' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'
-                    }`}>
-                      {u.status}
-                    </span>
-                  </td>
-                  <td className="px-8 py-6 font-mono text-xs text-white">R$ {u.saldo.toFixed(2)}</td>
-                  <td className="px-8 py-6 text-right">
-                    <button onClick={() => setClienteAberto(u.id === clienteAberto ? null : u.id)}>
-                      <ChevronDown className={`transition-transform duration-500 ${clienteAberto === u.id ? 'rotate-180 text-blue-500' : 'text-slate-700'}`} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
+          <button
+            onClick={() => setMostrarRecusados((valor) => !valor)}
+            className="px-5 py-4 text-xs font-black tracking-widest uppercase transition border rounded-2xl bg-white/80 border-slate-200 text-slate-700 hover:bg-white dark:bg-slate-900 dark:border-slate-800 dark:text-white"
+          >
+            <T>{mostrarRecusados ? "Ocultar recusadas" : "Mostrar recusadas"}</T>
+          </button>
+        </div>
+
+        <ManagerUsersTable
+          usuarios={usuarios}
+          clienteAberto={clienteAberto}
+          statusEmAtualizacao={statusEmAtualizacao}
+          deletando={deletando}
+          onToggleExpand={(id) => setClienteAberto(clienteAberto === id ? null : id)}
+          onAlterarStatus={alterarStatus}
+          onAbrirExclusao={abrirModalExclusao}
+        />
+
+        <div className="flex flex-col items-center justify-between gap-3 px-4 py-5 mt-6 border bg-white/80 rounded-2xl border-slate-200 dark:bg-slate-900 dark:border-slate-800 md:flex-row">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            <T>Total filtrado:</T> {totalElements}
+          </p>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handlePrevPage}
+              disabled={page <= 0}
+              className="px-4 py-2 text-xs font-bold transition border rounded-xl border-slate-300 dark:border-slate-700 disabled:opacity-40"
+            >
+              <T>Anterior</T>
+            </button>
+            <span className="px-3 text-xs font-bold text-slate-600 dark:text-slate-300">
+              {totalPages === 0 ? 0 : page + 1} / {totalPages}
+            </span>
+            <button
+              type="button"
+              onClick={handleNextPage}
+              disabled={page + 1 >= totalPages}
+              className="px-4 py-2 text-xs font-bold transition border rounded-xl border-slate-300 dark:border-slate-700 disabled:opacity-40"
+            >
+              <T>Proxima</T>
+            </button>
+          </div>
+        </div>
       </main>
 
-      {/* INTEGRAÇÃO DOS MODAIS QUE VOCÊ ENVIOU */}
-      <DepositModal 
-        isOpen={modalDeposito.open} 
-        clienteNome={modalDeposito.nome}
-        onClose={() => setModalDeposito({ open: false })} 
-        onConfirm={(v) => console.log("Aporte:", v)} // Aqui ligaremos ao back futuramente
-      /> 
-
-      <ConfirmationModal 
-        isOpen={modalExclusao.open} 
-        title="Eliminar Cliente"
-        description="Esta ação removerá todos os dados do Core Banking permanentemente."
-        onClose={() => setModalExclusao({ open: false })} 
-      /> 
+      <ConfirmationModal
+        isOpen={modalExclusao.open}
+        onClose={() => setModalExclusao({ open: false, id: null, nome: "" })}
+        onConfirm={() => deletarUsuario(modalExclusao.id)}
+        title="Excluir cliente"
+        description={`Confirma a exclusao definitiva de ${modalExclusao.nome}?`}
+        confirmText="Sim, excluir"
+        isLoading={deletando}
+      />
     </div>
   );
 }
 
-export default Painel;
+export default ManagerDashboardPage;
+
+

@@ -6,21 +6,32 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum StatusConta {
-    PENDENTE("Em análise"),
-    ATIVA("Conta Ativa"),
-    SUSPENSA("Conta Suspensa por violação"),
-    BLOQUEADA("Banido permanentemente"),
-    RECUSADA("Cadastro não aprovado");
+    PENDENTE("Em analise"),
+    ATIVA("Conta ativa"),
+    SUSPENSA("Conta suspensa"),
+    BLOQUEADA("Conta bloqueada"),
+    RECUSADA("Cadastro recusado");
 
     private final String descricao;
 
-    // Método Poka-Yoke: Define quem pode ou não logar
     public boolean podeFazerLogin() {
-        return this == ATIVA || this == PENDENTE || this == SUSPENSA;
+        return this == ATIVA;
     }
 
-    // Define quem pode tentar se cadastrar de novo
     public boolean podeTentarNovoCadastro() {
-        return this == RECUSADA; // BLOQUEADO não pode voltar nunca
+        return this == RECUSADA;
+    }
+
+    public boolean podeTransicionarPara(StatusConta destino) {
+        if (destino == null || this == destino) {
+            return false;
+        }
+
+        return switch (this) {
+            case PENDENTE -> destino == ATIVA || destino == RECUSADA;
+            case ATIVA -> destino == SUSPENSA || destino == BLOQUEADA;
+            case SUSPENSA -> destino == ATIVA || destino == BLOQUEADA;
+            case BLOQUEADA, RECUSADA -> false;
+        };
     }
 }

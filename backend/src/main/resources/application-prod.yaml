@@ -1,0 +1,42 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
+  sql:
+    init:
+      mode: never
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: ${FLYWAY_BASELINE_ON_MIGRATE:false}
+
+jwt:
+  secret: ${JWT_SECRET}
+  previous-secrets: ${JWT_PREVIOUS_SECRETS:}
+  expiration-minutes: ${JWT_EXP_MINUTES:60}
+  issuer: ${JWT_ISSUER:netbank-api}
+
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS}
+
+auth:
+  cookie:
+    secure: true
+
+management:
+  endpoint:
+    health:
+      show-details: never
+      show-components: never

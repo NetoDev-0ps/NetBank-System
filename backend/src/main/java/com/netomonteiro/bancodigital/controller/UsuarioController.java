@@ -1,141 +1,195 @@
 package com.netomonteiro.bancodigital.controller;
 
+import com.netomonteiro.bancodigital.api.ApiErrorBodyFactory;
+import com.netomonteiro.bancodigital.dto.request.AlterarStatusRequest;
+import com.netomonteiro.bancodigital.dto.request.DepositaRequest;
+import com.netomonteiro.bancodigital.dto.request.UsuarioCriarRequest;
+import com.netomonteiro.bancodigital.dto.response.UsuarioPageResponseDTO;
 import com.netomonteiro.bancodigital.dto.response.UsuarioResponseDTO;
 import com.netomonteiro.bancodigital.model.Usuario;
 import com.netomonteiro.bancodigital.model.enums.StatusConta;
+import com.netomonteiro.bancodigital.security.ClientIpResolver;
+import com.netomonteiro.bancodigital.security.HumanCaptchaService;
+import com.netomonteiro.bancodigital.security.JwtPrincipal;
+import com.netomonteiro.bancodigital.security.SecurityAccessHelper;
+import com.netomonteiro.bancodigital.service.AuditService;
 import com.netomonteiro.bancodigital.service.UsuarioService;
-
-import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
-
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/usuarios")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
-
-    // Constantes para resolver o aviso do SonarLint (S1192)
-    private static final String CHAVE_ERRO = "erro";
-    private static final String CHAVE_STATUS = "status";
-
-    private UsuarioResponseDTO converterParaDTO(Usuario usuario) {
-        return new UsuarioResponseDTO(
-            usuario.getId(),
-            usuario.getNome(),
-            usuario.getEmail(),
-            usuario.getCpf(),
-            usuario.getTelefone(),       
-            usuario.getSaldo(),
-            usuario.getStatus(),
-            usuario.getDataNascimento(), 
-            usuario.getCargo() // CORREÇÃO ARQUITETURAL: Entrega o cargo ao Frontend
-        );
-    }
+    private final AuditService auditService;
+    private final HumanCaptchaService humanCaptchaService;
 
     @GetMapping
     public ResponseEntity<List<UsuarioResponseDTO>> listarTodos() {
-        List<UsuarioResponseDTO> usuariosSeguros = usuarioService.listarTodos()
+        List<UsuarioResponseDTO> usuariosSeguros = usuarioService
+            .listarTodos()
             .stream()
-            .map(this::converterParaDTO)
+            .map(usuarioService::toDto)
             .toList();
 
         return ResponseEntity.ok(usuariosSeguros);
     }
 
+    @GetMapping("/paginado")
+    public ResponseEntity<UsuarioPageResponseDTO> listarPaginado(
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "12") int size,
+        @RequestParam(required = false) String busca,
+        @RequestParam(defaultValue = "false") boolean incluirRecusadas
+    ) {
+        UsuarioPageResponseDTO response = usuarioService.listarPaginado(
+            busca,
+            page,
+            size,
+            incluirRecusadas
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/{id}")
-    public ResponseEntity<Object> buscarPorId(@PathVariable Long id) {
-        try {
-            Usuario usuario = usuarioService.buscarPorId(id);
-            return ResponseEntity.ok(converterParaDTO(usuario));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(CHAVE_ERRO, e.getMessage()));
+    public ResponseEntity<Object> buscarPorId(
+        @PathVariable Long id,
+        @AuthenticationPrincipal JwtPrincipal principal,
+        HttpServletRequest request
+    ) {
+        if (!SecurityAccessHelper.canAccessUser(principal, id)) {
+            return accessDenied(request);
         }
+
+        Usuario usuario = usuarioService.buscarPorId(id);
+        return ResponseEntity.ok(usuarioService.toDto(usuario));
     }
 
     @PostMapping
-    public ResponseEntity<Object> criarUsuario(@Valid @RequestBody Usuario usuario) {
-        try {
-            Usuario novoUsuario = usuarioService.criar(usuario);
-            return ResponseEntity.status(HttpStatus.CREATED).body(converterParaDTO(novoUsuario));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of(CHAVE_ERRO, e.getMessage()));
-        }
+    public ResponseEntity<UsuarioResponseDTO> criarUsuario(
+        @Valid @RequestBody UsuarioCriarRequest request,
+        HttpServletRequest httpRequest
+    ) {
+        humanCaptchaService.consumeProof(
+            httpRequest.getHeader("X-Captcha-Proof"),
+            ClientIpResolver.resolve(httpRequest)
+        );
+
+        Usuario novoUsuario = new Usuario();
+        novoUsuario.setNome(request.nome());
+        novoUsuario.setCpf(request.cpf());
+        novoUsuario.setTelefone(request.telefone());
+        novoUsuario.setEmail(request.email());
+        novoUsuario.setSenha(request.senha());
+        novoUsuario.setDataNascimento(request.dataNascimento());
+
+        Usuario salvo = usuarioService.criar(novoUsuario);
+        return ResponseEntity.status(201).body(usuarioService.toDto(salvo));
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<Object> loginCliente(@RequestBody Map<String, String> credenciais) {
-        try {
-            Usuario usuario = usuarioService.loginPorEmail(
-                credenciais.get("email"),
-                credenciais.get("senha")
-            );
-            return ResponseEntity.ok(converterParaDTO(usuario));
-        } catch (RuntimeException e) { 
-            // PREVENÇÃO DE ERRO 500: Captura falhas de negócio/auth e padroniza a saída
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of(CHAVE_ERRO, "Acesso negado. Credenciais inválidas."));
+    @PatchMapping("/{id}/primeiro-acesso-concluido")
+    public ResponseEntity<Object> concluirPrimeiroAcesso(
+        @PathVariable Long id,
+        @AuthenticationPrincipal JwtPrincipal principal,
+        HttpServletRequest request
+    ) {
+        if (!SecurityAccessHelper.canAccessOwnCustomer(principal, id)) {
+            return accessDenied(request);
         }
+
+        Usuario atualizado = usuarioService.concluirPrimeiroAcesso(id);
+        return ResponseEntity.ok(Map.of("usuario", usuarioService.toDto(atualizado)));
     }
 
     @PatchMapping("/{id}/status")
-    public ResponseEntity<Object> alterarStatus(@PathVariable Long id, @RequestBody Map<String, String> dados) {
+    public ResponseEntity<Object> alterarStatus(
+        @PathVariable Long id,
+        @Valid @RequestBody AlterarStatusRequest dados,
+        @AuthenticationPrincipal JwtPrincipal principal
+    ) {
+        StatusConta novoStatus;
         try {
-            if (!dados.containsKey(CHAVE_STATUS) || dados.get(CHAVE_STATUS) == null) {
-                return ResponseEntity.badRequest().body(Map.of(CHAVE_ERRO, "O campo 'status' é obrigatório."));
-            }
-
-            StatusConta novoStatus = StatusConta.valueOf(dados.get(CHAVE_STATUS).toUpperCase());
-            usuarioService.atualizarStatus(id, novoStatus);
-
-            return ResponseEntity.ok(Map.of(
-                "mensagem", "Status atualizado com sucesso",
-                "novoStatus", novoStatus
-            ));
-        } catch (IllegalArgumentException e) { 
-            // CORREÇÃO SEMÂNTICA: Mensagem alinhada com os estados reais do banco
-            return ResponseEntity.badRequest().body(Map.of(CHAVE_ERRO, "Status inválido. Utilize ATIVA, SUSPENSA, BLOQUEADA ou RECUSADA."));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(CHAVE_ERRO, e.getMessage()));
+            novoStatus = StatusConta.valueOf(dados.status().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException(
+                "STATUS_INVALIDO. Utilize ATIVA, SUSPENSA, BLOQUEADA, PENDENTE ou RECUSADA."
+            );
         }
+
+        Usuario usuarioAtualizado = usuarioService.atualizarStatus(id, novoStatus);
+        auditService.registrar(
+            principal,
+            "ALTERAR_STATUS_USUARIO",
+            "USUARIO",
+            String.valueOf(id),
+            "Novo status: " + usuarioAtualizado.getStatus()
+        );
+
+        return ResponseEntity.ok(
+            Map.of(
+                "mensagem",
+                "Status atualizado com sucesso",
+                "novoStatus",
+                usuarioAtualizado.getStatus()
+            )
+        );
     }
 
     @PatchMapping("/{id}/deposito")
-    public ResponseEntity<Object> depositar(@PathVariable Long id, @RequestBody Map<String, Object> dados) {
-        try {
-            Object valorObj = dados.get("valor");
-            if (valorObj == null) {
-                return ResponseEntity.badRequest().body(Map.of(CHAVE_ERRO, "O campo 'valor' é obrigatório."));
-            }
-
-            BigDecimal valor = new BigDecimal(valorObj.toString());
-            usuarioService.depositar(id, valor);
-
-            return ResponseEntity.ok(Map.of("mensagem", "Depósito de R$ " + valor + " confirmado!"));
-        } catch (NumberFormatException e) {
-            return ResponseEntity.badRequest().body(Map.of(CHAVE_ERRO, "O valor informado é inválido."));
-        } catch (EntityNotFoundException | IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of(CHAVE_ERRO, "Erro no depósito: " + e.getMessage()));
-        }
+    public ResponseEntity<Object> depositar(
+        @PathVariable Long id,
+        @Valid @RequestBody DepositaRequest dados,
+        @AuthenticationPrincipal JwtPrincipal principal
+    ) {
+        usuarioService.depositar(id, dados.valor());
+        auditService.registrar(
+            principal,
+            "DEPOSITO_USUARIO",
+            "USUARIO",
+            String.valueOf(id),
+            "Deposito realizado no valor: " + dados.valor()
+        );
+        return ResponseEntity.ok(Map.of("mensagem", "Deposito confirmado."));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Object> deletarUsuario(@PathVariable Long id) {
-        try {
-            usuarioService.deletar(id);
-            return ResponseEntity.noContent().build();
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(CHAVE_ERRO, e.getMessage()));
-        }
+    public ResponseEntity<Object> deletarUsuario(
+        @PathVariable Long id,
+        @AuthenticationPrincipal JwtPrincipal principal
+    ) {
+        usuarioService.deletar(id);
+        auditService.registrar(
+            principal,
+            "EXCLUIR_USUARIO",
+            "USUARIO",
+            String.valueOf(id),
+            "Exclusao definitiva do cadastro"
+        );
+
+        return ResponseEntity.noContent().build();
+    }
+
+    private ResponseEntity<Object> accessDenied(HttpServletRequest request) {
+        return ResponseEntity
+            .status(403)
+            .body(ApiErrorBodyFactory.build("ACESSO_NEGADO", request));
     }
 }
+

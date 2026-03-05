@@ -1,0 +1,53 @@
+services:
+  - type: web
+    name: netbank-backend
+    env: docker
+    dockerfilePath: ./backend/Dockerfile
+    plan: free
+    autoDeploy: true
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: DB_URL
+        fromDatabase:
+          name: netbank-db
+          property: connectionString
+      - key: DB_USER
+        fromDatabase:
+          name: netbank-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: netbank-db
+          property: password
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_PREVIOUS_SECRETS
+        value: ""
+      - key: JWT_EXP_MINUTES
+        value: "60"
+      - key: JWT_ISSUER
+        value: netbank-api
+      - key: ADMIN_EMAIL
+        value: admin@netbank.com.br
+      - key: ADMIN_NAME
+        value: Administrador Master
+      - key: ADMIN_PASSWORD_HASH
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: AUTH_COOKIE_SECURE
+        value: "true"
+      - key: AUTH_COOKIE_SAME_SITE
+        value: Strict
+      - key: AUTH_COOKIE_NAME
+        value: NETBANK_AUTH
+      - key: FLYWAY_BASELINE_ON_MIGRATE
+        value: "false"
+
+databases:
+  - name: netbank-db
+    plan: free
+    databaseName: bancodigital_db
+    user: postgres

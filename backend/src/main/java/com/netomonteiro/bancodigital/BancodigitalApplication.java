@@ -10,3 +10,4 @@ public class BancodigitalApplication {
         SpringApplication.run(BancodigitalApplication.class, args);
     }
 }
+

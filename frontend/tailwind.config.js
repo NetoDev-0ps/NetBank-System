@@ -1,32 +1,36 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  // Estratégia de tema habilitada para alternância via injeção da classe 'dark' no <html>
-  darkMode: 'class', 
-  content: [
-    "./index.html", 
-    "./src/**/*.{js,ts,jsx,tsx}"
-  ],
+  darkMode: "class",
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
       colors: {
-        // Cores de Identidade da Marca (Legado)
-        netMint: '#C5F5E0',
-        netSky: '#9DEDF4',
-        netBlue: '#3b82f6',
-        
-        // Design Tokens: Sistema Dual-Tone (NetBank v2.0)
-        netTheme: {
-          // Fundos principais da aplicação (Backgrounds)
-          base: {
-            light: '#BFCEF5', // Azul Soft (White Mode)
-            dark: '#050505',  // Dark Padrão
-          },
-          // Superfícies sobrepostas (Cards, Footers, Headers)
-          surface: {
-            footer: '#B1C0F5', // Azul levemente mais escuro para contraste
-          }
-        }
-      }
+        brand: {
+          primary: "#1E4DA2",
+          secondary: "#0F3B98",
+          accent: "#2A85D4",
+          light: "#57BAF3",
+        },
+        netdark: {
+          100: "#3F536B",
+          200: "#064166",
+          300: "#082C4D",
+          400: "#042566",
+          500: "#04162F",
+          600: "#0F172A",
+        },
+        netlight: {
+          50: "#F4F9FF",
+          100: "#6EACEB",
+          200: "#00BCEB",
+          300: "#3EADED",
+          400: "#3189BD",
+          500: "#3586C4",
+        },
+      },
+      fontFamily: {
+        sans: ["Plus Jakarta Sans", "system-ui", "sans-serif"],
+      },
     },
   },
   plugins: [],

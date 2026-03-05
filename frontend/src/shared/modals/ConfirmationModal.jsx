@@ -1,14 +1,15 @@
-import React from "react";
-// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle, X, Trash2 } from "lucide-react";
+
 const ConfirmationModal = ({
   isOpen,
   onClose,
   onConfirm,
   title,
   description,
-  isLoading,
+  message,
+  confirmText = "Confirmar",
+  isLoading = false,
 }) => {
   if (!isOpen) return null;
 
@@ -16,7 +17,6 @@ const ConfirmationModal = ({
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Backdrop (Fundo Escuro) */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -25,14 +25,12 @@ const ConfirmationModal = ({
             className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
           />
 
-          {/* Card do Modal */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             className="relative w-full max-w-md overflow-hidden border shadow-2xl bg-slate-900 border-slate-800 rounded-2xl"
           >
-            {/* Faixa de Perigo no Topo */}
             <div className="w-full h-2 bg-red-600/80" />
 
             <div className="p-6">
@@ -43,7 +41,7 @@ const ConfirmationModal = ({
                 <div>
                   <h3 className="mb-2 text-lg font-bold text-white">{title}</h3>
                   <p className="text-sm leading-relaxed text-slate-400">
-                    {description}
+                    {description || message}
                   </p>
                 </div>
               </div>
@@ -52,27 +50,26 @@ const ConfirmationModal = ({
                 <button
                   onClick={onClose}
                   disabled={isLoading}
-                  className="px-4 py-2 text-sm font-medium transition rounded-lg text-slate-300 hover:text-white hover:bg-slate-800"
+                  className="px-4 py-2 text-sm font-medium transition rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 disabled:opacity-50"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={onConfirm}
                   disabled={isLoading}
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white transition bg-red-600 rounded-lg shadow-lg hover:bg-red-700 shadow-red-900/20"
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white transition bg-red-600 rounded-lg shadow-lg hover:bg-red-700 shadow-red-900/20 disabled:opacity-50"
                 >
                   {isLoading ? (
-                    "Excluindo..."
+                    "Processando..."
                   ) : (
                     <>
-                      <Trash2 size={16} /> Confirmar Exclusão
+                      <Trash2 size={16} /> {confirmText}
                     </>
                   )}
                 </button>
               </div>
             </div>
 
-            {/* Botão X no topo */}
             <button
               onClick={onClose}
               className="absolute transition top-4 right-4 text-slate-500 hover:text-white"

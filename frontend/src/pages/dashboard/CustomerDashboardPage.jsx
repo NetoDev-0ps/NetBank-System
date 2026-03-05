@@ -1,341 +1,300 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  LogOut,
-  Home,
-  PieChart,
-  CreditCard,
-  Settings,
-  Search,
   Bell,
-  MoveUpRight,
-  PiggyBank,
-  TrendingUp,
+  CreditCard,
   Eye,
   EyeOff,
+  Home,
+  LogOut,
+  MoveUpRight,
+  PieChart,
+  PiggyBank,
+  RefreshCw,
+  Settings,
+  TrendingUp,
 } from "lucide-react";
-
-// eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
+import api from "../../core/api/apiClient";
+import { getCustomerData, logout, saveCustomerSession } from "../../core/auth/session";
+import T from "../../shared/ui/Translate";
+
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.1, // Atraso entre os elementos
-      delayChildren: 0.2,
-    },
+    transition: { staggerChildren: 0.08, delayChildren: 0.1 },
   },
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, ease: "easeOut" },
-  },
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
 };
 
-function ClientDashboard() {
+function CustomerDashboardPage() {
   const navigate = useNavigate();
 
-  // 1. Inicializa o estado lendo direto do localStorage (Lazy Init)
-  // Isso evita o erro de "setState inside useEffect" e remove o aviso do ESLint
-  const [usuario] = useState(() => {
-    const dados = localStorage.getItem("cliente_dados");
-    return dados ? JSON.parse(dados) : null;
-  });
-
-  // 2. estado para controlar o "Olhinho" do saldo
+  const [usuario, setUsuario] = useState(() => getCustomerData());
   const [mostrarSaldo, setMostrarSaldo] = useState(true);
+  const [loadingFreshData, setLoadingFreshData] = useState(false);
+  const userId = usuario?.id;
+  const userStatus = usuario?.status;
 
-  // 3. O useEffect para expulsar quem não tem login
+  const handleLogout = useCallback(() => {
+    logout("/home");
+  }, []);
+
+  const sincronizarDados = useCallback(async () => {
+    if (!userId) return;
+
+    try {
+      setLoadingFreshData(true);
+      const response = await api.get(`/usuarios/${userId}`);
+      const dadosAtualizados = response.data;
+
+      if (dadosAtualizados.status !== "ATIVA") {
+        handleLogout();
+        return;
+      }
+
+      setUsuario(dadosAtualizados);
+      saveCustomerSession(dadosAtualizados);
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        console.error("Erro na sincronizacao:", err);
+      }
+    } finally {
+      setLoadingFreshData(false);
+    }
+  }, [userId, handleLogout]);
+
   useEffect(() => {
-    if (!usuario) {
-      navigate("/login-cliente");
+    if (!userId) {
+      logout("/login-cliente");
       return;
     }
 
-    // NOVA VALIDAÇÃO: Se o status for diferente de ACEITO, bloqueia
-    if (usuario.status !== "ACEITO") {
-      alert(
-        "Sua conta ainda está em análise. Por favor, aguarde a aprovação do gerente.",
-      );
-      localStorage.removeItem("cliente_dados"); // Limpa o "lixo" para não entrar em loop
-      localStorage.removeItem("cliente_token");
-      navigate("/login-cliente");
+    if (userStatus !== "ATIVA") {
+      handleLogout();
+      return;
     }
-  }, [usuario, navigate]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("cliente_token");
-    localStorage.removeItem("cliente_dados"); // ADICIONE ESTA LINHA
-    navigate("/");
-  };
+    sincronizarDados();
+  }, [userId, userStatus, handleLogout, sincronizarDados]);
 
-  // Evita erro de renderização se o usuário não tiver carregado ainda
   if (!usuario) return null;
 
   return (
-    // LAYOUT DARK BLUE
-    <div className="flex h-screen overflow-hidden font-sans text-white bg-slate-950">
-      {/* SIDEBAR */}
-      <aside className="z-20 flex flex-col justify-between w-20 border-r md:w-64 bg-slate-900 border-slate-800">
-        <div>
-          <div className="flex items-center gap-3 p-6 mb-6 border-b border-slate-800">
-            <div className="flex items-center justify-center w-10 h-10 text-lg font-bold bg-blue-600 rounded-lg shadow-lg shadow-blue-900/50">
-              {usuario.nome.charAt(0)}
+    <div className="nb-page lg:grid lg:grid-cols-[250px,1fr]">
+      <aside className="border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur p-4 lg:p-5">
+        <div className="flex lg:flex-col justify-between lg:justify-start gap-4">
+          <div>
+            <div className="flex items-center gap-3 pb-4 border-b border-slate-200 dark:border-slate-800">
+              <div className="w-10 h-10 rounded-xl bg-brand-primary text-white font-black flex items-center justify-center">
+                {usuario.nome.charAt(0)}
+              </div>
+              <div>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <T>Cliente</T>
+                </p>
+                <p className="font-bold text-slate-800 dark:text-white truncate max-w-[120px] lg:max-w-none">
+                  {usuario.nome.split(" ")[0]}
+                </p>
+              </div>
             </div>
-            <span className="hidden font-bold text-blue-100 truncate md:block">
-              {usuario.nome.split(" ")[0]}
-            </span>
+
+            <nav className="mt-4 grid grid-cols-2 gap-2 lg:grid-cols-1">
+              <NavItem icon={<Home size={18} />} label="Inicio" active />
+              <NavItem icon={<PieChart size={18} />} label="Extrato" />
+              <NavItem icon={<CreditCard size={18} />} label="Cartoes" />
+              <NavItem icon={<Settings size={18} />} label="Configuracoes" />
+            </nav>
           </div>
 
-          <nav className="px-4 space-y-2">
-            <NavItem icon={<Home size={20} />} label="Início" active />
-            <NavItem icon={<PieChart size={20} />} label="Extrato" />
-            <NavItem icon={<CreditCard size={20} />} label="Meus Cartões" />
-            <NavItem icon={<Settings size={20} />} label="Configurações" />
-          </nav>
-        </div>
-
-        <div className="p-4 border-t border-slate-800">
-          <button
-            onClick={handleLogout}
-            className="flex items-center w-full gap-3 p-3 text-red-400 transition hover:text-red-300 hover:bg-red-900/20 rounded-xl"
-          >
-            <LogOut size={20} />{" "}
-            <span className="hidden text-sm font-bold md:block">
-              Sair da Conta
-            </span>
+          <button onClick={handleLogout} className="nb-button-danger w-full lg:mt-8">
+            <LogOut size={16} />
+            <T>Sair</T>
           </button>
         </div>
       </aside>
 
-      {/* ÁREA PRINCIPAL COM GRADIENTE */}
-      <motion.main
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="relative flex-1 p-4 overflow-y-auto md:p-8 bg-gradient-to-br from-slate-950 to-blue-950"
-      >
-        {/* Detalhe de Fundo */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none"></div>
-
-        {/* Header */}
-        <motion.header
-          variants={itemVariants}
-          className="relative z-10 flex items-center justify-between mb-8"
-        >
+      <motion.main variants={containerVariants} initial="hidden" animate="visible" className="nb-shell py-5 sm:py-8">
+        <motion.header variants={itemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-white md:text-3xl">
-              Olá, {usuario.nome.split(" ")[0]} 👋
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
+              <T>Ola</T>, {usuario.nome.split(" ")[0]}
             </h1>
-            <p className="text-sm text-blue-300/60">
-              Bem-vindo ao seu banco digital.
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              <T>Visao geral da sua conta digital NetBank.</T>
             </p>
           </div>
-          <div className="flex gap-4">
-            <div className="p-3 text-blue-200 transition border rounded-full cursor-pointer bg-white/5 border-white/10 hover:bg-white/10">
-              <Search size={20} />
-            </div>
-            <div className="p-3 text-blue-200 transition border rounded-full cursor-pointer bg-white/5 border-white/10 hover:bg-white/10">
-              <Bell size={20} />
-            </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={sincronizarDados}
+              className={`nb-button-ghost !py-2.5 !px-3 ${loadingFreshData ? "animate-spin" : ""}`}
+              title="Atualizar"
+            >
+              <RefreshCw size={16} />
+            </button>
+            <button className="nb-button-ghost !py-2.5 !px-3" title="Notificacoes">
+              <Bell size={16} />
+            </button>
           </div>
         </motion.header>
 
-        <div className="relative z-10 grid grid-cols-1 gap-8 lg:grid-cols-3">
-          {/* COLUNA ESQUERDA */}
-          <div className="space-y-6 lg:col-span-2">
-            {/* Cartão Saldo (Glassmorphism) */}
-            <div className="relative p-8 overflow-hidden border shadow-2xl bg-gradient-to-r from-blue-900 to-blue-800 rounded-3xl border-blue-700/50 group">
-              <div className="absolute top-0 right-0 w-64 h-64 -mt-16 -mr-16 transition duration-500 rounded-full bg-white/5 blur-2xl group-hover:bg-white/10"></div>
-
-              <div className="flex items-center justify-between mb-8">
-                <span className="font-medium text-blue-200">
-                  Saldo Disponível
-                </span>
-                <button
-                  onClick={() => setMostrarSaldo(!mostrarSaldo)}
-                  className="text-blue-300 transition hover:text-white"
-                >
-                  {mostrarSaldo ? <Eye size={20} /> : <EyeOff size={20} />}
+        <div className="grid gap-5 lg:grid-cols-[1.6fr,1fr]">
+          <div className="space-y-5">
+            <motion.section variants={itemVariants} className="nb-card p-5 sm:p-6 bg-gradient-to-r from-brand-primary to-brand-secondary text-white border-0">
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-black tracking-widest uppercase text-blue-100">
+                  <T>Saldo em conta</T>
+                </p>
+                <button onClick={() => setMostrarSaldo((v) => !v)} className="text-blue-100 hover:text-white">
+                  {mostrarSaldo ? <Eye size={18} /> : <EyeOff size={18} />}
                 </button>
               </div>
 
-              <div className="mb-8">
-                <h2 className="text-4xl font-bold tracking-tight text-white md:text-5xl">
-                  {mostrarSaldo
-                    ? new Intl.NumberFormat("pt-BR", {
-                        style: "currency",
-                        currency: "BRL",
-                      }).format(usuario.saldo)
-                    : "R$ ••••••"}
-                </h2>
-              </div>
+              <p className="mt-4 text-3xl sm:text-4xl font-black tracking-tight">
+                {mostrarSaldo
+                  ? new Intl.NumberFormat("pt-BR", {
+                      style: "currency",
+                      currency: "BRL",
+                    }).format(usuario.saldo)
+                  : "R$ ******"}
+              </p>
 
-              <div className="flex gap-4 mt-4">
-                <button className="bg-white text-blue-900 px-6 py-2.5 rounded-full font-bold text-sm hover:bg-blue-50 transition">
-                  Ver Extrato
+              <div className="mt-5 flex flex-col sm:flex-row gap-3">
+                <button className="nb-button-secondary !bg-white !text-brand-primary !border-white w-full sm:w-auto">
+                  <T>Ver extrato</T>
                 </button>
-                <button className="bg-blue-700/50 text-white border border-blue-600 px-6 py-2.5 rounded-full font-bold text-sm hover:bg-blue-700 transition">
-                  Pagar Fatura
+                <button className="nb-button-secondary !bg-white/10 !text-white !border-white/20 w-full sm:w-auto">
+                  <T>Pagar fatura</T>
                 </button>
               </div>
-            </div>
+            </motion.section>
 
-            {/* Atalhos Rápidos */}
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-              {/* Botão Pix Conectado */}
-              <QuickAction
-                icon={<MoveUpRight />}
-                label="Transferir Pix"
-                onClick={() => navigate("/area-pix")}
-              />
+            <motion.section variants={itemVariants} className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <QuickAction icon={<MoveUpRight size={18} />} label="Transferir Pix" onClick={() => navigate("/area-pix")} />
+              <QuickAction icon={<CreditCard size={18} />} label="Cartoes" />
+              <QuickAction icon={<PiggyBank size={18} />} label="Poupanca" />
+              <QuickAction icon={<TrendingUp size={18} />} label="Investir" />
+            </motion.section>
 
-              <QuickAction icon={<CreditCard />} label="Cartões" />
-              <QuickAction icon={<PiggyBank />} label="Poupança" />
-              <QuickAction icon={<TrendingUp />} label="Investir" />
-            </div>
-
-            {/* Últimas Transações */}
-            <div className="p-6 border bg-slate-900/50 border-slate-800 rounded-3xl backdrop-blur-sm">
-              <h3 className="mb-4 text-lg font-bold text-blue-100">
-                Histórico Recente
-              </h3>
-              <div className="space-y-4">
-                <TransactionItem
-                  icon="🚗"
-                  title="Uber *Trip"
-                  date="Hoje, 14:32"
-                  value="- R$ 15,90"
-                />
-                <TransactionItem
-                  icon="🍕"
-                  title="iFood *Lanche"
-                  date="Ontem, 20:01"
-                  value="- R$ 48,90"
-                />
-                <TransactionItem
-                  icon="💰"
-                  title="Pix Recebido"
-                  date="10/02"
-                  value="+ R$ 1.250,00"
-                  isIncome
-                />
+            <motion.section variants={itemVariants} className="nb-card p-5">
+              <h2 className="text-lg font-black text-slate-900 dark:text-white">
+                <T>Atividade recente</T>
+              </h2>
+              <div className="mt-4">
+                {usuario.saldo > 0 ? (
+                  <TransactionItem
+                    icon="RS"
+                    title="Bonus NetBank"
+                    date="Abertura de conta"
+                    value="+ R$ 5.000,00"
+                    isIncome
+                  />
+                ) : (
+                  <p className="text-sm italic text-slate-500 dark:text-slate-400">
+                    <T>Nenhuma transacao realizada ainda.</T>
+                  </p>
+                )}
               </div>
-            </div>
+            </motion.section>
           </div>
 
-          {/* COLUNA DIREITA */}
-          <div className="space-y-6">
-            <div className="flex flex-col h-full p-6 border bg-gradient-to-b from-slate-900 to-slate-900/50 border-slate-800 rounded-3xl backdrop-blur-sm">
-              <h3 className="mb-6 text-lg font-bold text-blue-100">
-                Meu Cartão
-              </h3>
+          <motion.aside variants={itemVariants} className="nb-card p-5">
+            <h2 className="text-[11px] font-black tracking-widest uppercase text-slate-500 dark:text-slate-400">
+              <T>Meus cartoes</T>
+            </h2>
 
-              {/* Cartão Virtual Visual */}
-              <div className="bg-gradient-to-br from-slate-700 to-slate-900 h-48 rounded-2xl p-6 relative overflow-hidden border border-slate-600/50 shadow-lg mb-6 group hover:scale-[1.02] transition">
-                <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-blue-500/20 blur-xl"></div>
-                <div className="flex items-start justify-between mb-8">
-                  <span className="text-xl italic font-bold tracking-wider text-white/90">
-                    NetBank
-                  </span>
-                  <span className="text-xs text-gray-400">Virtual</span>
-                </div>
-                <div className="mt-auto">
-                  <p className="mb-2 font-mono text-sm text-gray-300">
-                    •••• •••• •••• 8829
-                  </p>
-                  <p className="text-xs font-bold text-gray-500 uppercase">
-                    {usuario.nome}
-                  </p>
-                </div>
+            <div className="mt-4 rounded-2xl p-5 bg-gradient-to-br from-slate-800 to-slate-900 text-white min-h-[180px]">
+              <div className="flex items-center justify-between">
+                <p className="text-lg italic font-black">NetBank</p>
+                <span className="text-[10px] font-black uppercase tracking-widest text-blue-200">Virtual</span>
               </div>
+              <p className="mt-10 font-mono text-sm tracking-widest text-slate-300">**** **** **** 8829</p>
+              <p className="mt-3 text-[11px] uppercase tracking-widest text-slate-400">{usuario.nome}</p>
+            </div>
 
-              <h3 className="mb-4 text-sm font-bold tracking-wider text-gray-400 uppercase">
-                Gastos por Categoria
+            <div className="mt-6">
+              <h3 className="text-[11px] font-black tracking-widest uppercase text-slate-500 dark:text-slate-400">
+                <T>Analise de gastos</T>
               </h3>
-              <div className="space-y-5">
-                <DetailItem
-                  label="Alimentação"
-                  percent="55%"
-                  color="bg-blue-500"
-                />
-                <DetailItem
-                  label="Transporte"
-                  percent="25%"
-                  color="bg-cyan-400"
-                />
-                <DetailItem
-                  label="Serviços"
-                  percent="20%"
-                  color="bg-indigo-500"
-                />
+              <div className="mt-4 space-y-3">
+                <DetailItem label="Lazer" percent="0%" color="bg-blue-500" />
+                <DetailItem label="Mercado" percent="0%" color="bg-cyan-500" />
+                <DetailItem label="Servicos" percent="0%" color="bg-indigo-500" />
               </div>
             </div>
-          </div>
+          </motion.aside>
         </div>
       </motion.main>
     </div>
   );
 }
 
-// Componentes Auxiliares
 const NavItem = ({ icon, label, active }) => (
-  <div
-    className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition ${active ? "bg-blue-600 text-white shadow-lg shadow-blue-900/20" : "text-slate-400 hover:text-white hover:bg-slate-800"}`}
+  <button
+    type="button"
+    className={`flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition ${
+      active
+        ? "bg-brand-primary text-white"
+        : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+    }`}
   >
     {icon}
-    <span className="hidden text-sm font-medium md:block">{label}</span>
-  </div>
+    <span>
+      <T>{label}</T>
+    </span>
+  </button>
 );
 
 const QuickAction = ({ icon, label, onClick }) => (
-  <motion.button
-    whileHover={{ scale: 1.05, backgroundColor: "rgba(29, 78, 216, 0.8)" }}
-    whileTap={{ scale: 0.95 }}
-    onClick={onClick}
-    className="flex flex-col items-center justify-center gap-3 p-4 transition border bg-slate-800/40 border-slate-800 rounded-2xl group h-28 text-slate-300"
-  >
-    <div className="p-2 transition rounded-full bg-slate-700/50 group-hover:bg-white/20">
-      {icon}
-    </div>
-    <span className="text-xs font-bold">{label}</span>
-  </motion.button>
+  <button type="button" onClick={onClick} className="nb-card-soft p-3 sm:p-4 text-left hover:scale-[1.01] transition-transform">
+    <div className="w-9 h-9 rounded-xl bg-brand-primary text-white flex items-center justify-center">{icon}</div>
+    <p className="mt-3 text-[11px] font-black tracking-widest uppercase text-slate-700 dark:text-slate-200">
+      <T>{label}</T>
+    </p>
+  </button>
 );
 
 const TransactionItem = ({ icon, title, date, value, isIncome }) => (
-  <div className="flex items-center justify-between p-3 transition cursor-default hover:bg-white/5 rounded-xl">
+  <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
     <div className="flex items-center gap-3">
-      <div className="flex items-center justify-center w-10 h-10 text-xl border rounded-full bg-slate-800 border-slate-700">
+      <div className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-base">
         {icon}
       </div>
       <div>
-        <p className="text-sm font-bold text-blue-100">{title}</p>
-        <p className="text-xs text-slate-500">{date}</p>
+        <p className="text-sm font-bold text-slate-900 dark:text-white">
+          <T>{title}</T>
+        </p>
+        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+          <T>{date}</T>
+        </p>
       </div>
     </div>
-    <span
-      className={`font-bold text-sm ${isIncome ? "text-green-400" : "text-slate-200"}`}
-    >
+    <p className={`text-sm font-black ${isIncome ? "text-emerald-600 dark:text-emerald-400" : "text-slate-700 dark:text-slate-200"}`}>
       {value}
-    </span>
+    </p>
   </div>
 );
 
 const DetailItem = ({ label, percent, color }) => (
   <div className="flex items-center justify-between text-sm">
     <div className="flex items-center gap-2">
-      <div
-        className={`w-2 h-2 rounded-full ${color} shadow-[0_0_10px_currentColor]`}
-      ></div>
-      <span className="text-slate-300">{label}</span>
+      <span className={`w-2.5 h-2.5 rounded-full ${color}`} />
+      <span className="text-xs text-slate-600 dark:text-slate-300">
+        <T>{label}</T>
+      </span>
     </div>
-    <span className="font-bold text-white">{percent}</span>
+    <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{percent}</span>
   </div>
 );
 
-export default ClientDashboard;
+export default CustomerDashboardPage;
+
+
+
+

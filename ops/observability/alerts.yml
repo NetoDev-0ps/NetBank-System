@@ -1,0 +1,37 @@
+groups:
+  - name: netbank-api-rules
+    rules:
+      - alert: NetbankApiDown
+        expr: up{job="netbank-api"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: NetBank API indisponivel
+          description: Nenhuma instancia da API respondeu nos ultimos 2 minutos.
+
+      - alert: NetbankHigh5xxRate
+        expr: |
+          sum(rate(http_server_requests_seconds_count{job="netbank-api",status=~"5.."}[5m]))
+          /
+          sum(rate(http_server_requests_seconds_count{job="netbank-api"}[5m]))
+          > 0.05
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: Taxa de erro 5xx acima do limite
+          description: Mais de 5% das requisicoes estao retornando 5xx por 10 minutos.
+
+      - alert: NetbankHighP95Latency
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (le) (rate(http_server_requests_seconds_bucket{job="netbank-api"}[5m]))
+          ) > 1.2
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: Latencia p95 elevada
+          description: Latencia p95 acima de 1.2s por 10 minutos.

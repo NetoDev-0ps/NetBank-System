@@ -1,107 +1,197 @@
-# 🏦 NetBank System | Enterprise Banking Architecture
+# NetBank System
 
-![Java](https://img.shields.io/badge/Java-17%20LTS-orange?style=for-the-badge&logo=openjdk)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2+-green?style=for-the-badge&logo=springboot)
-![React](https://img.shields.io/badge/React-18-blue?style=for-the-badge&logo=react)
-![Docker](https://img.shields.io/badge/Docker-Container-2496ED?style=for-the-badge&logo=docker)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-336791?style=for-the-badge&logo=postgresql)
+Monorepo full-stack de banco digital (cliente + gerente) com foco em regras de negocio, seguranca e experiencia mobile-first.
 
-O **NetBank System** é uma simulação de *Core Banking* desenvolvida com arquitetura Fullstack moderna, focada em alta performance, segurança transacional e escalabilidade. O projeto segue padrões de mercado utilizados por Fintechs e bancos digitais (Nubank, Revolut), implementando um **Monorepo** que integra uma API RESTful robusta com uma interface Client-Side reativa.
+## O que e
+NetBank e um projeto de portfolio que simula um banco digital real: cadastro de cliente, aprovacao por gerente, login com sessao segura, primeiro acesso com bonus, operacoes PIX e auditoria de acoes sensiveis.
 
----
+## Stack
+- Backend: Java 21, Spring Boot 4, Spring Security, JPA/Hibernate, Flyway, Actuator
+- Frontend: React 19, Vite 7, TailwindCSS, Framer Motion
+- Banco: PostgreSQL (Docker)
+- Testes: JUnit (integracao + unit), Playwright (E2E)
 
-## 🛠️ Stack Tecnológica & Versões
+## Arquitetura
+- `frontend/`: aplicacao web
+- `backend/`: API REST
+- `database/`: `docker-compose` do PostgreSQL
+- `docs/runbooks/`: operacao (dev DB, backup/restore, release/rollback, secrets)
+- `ops/observability/`: Prometheus e alertas
+- `scripts/`: automacao local para subir/resetar ambiente
 
-A escolha da stack priorizou estabilidade (LTS) e compatibilidade com ambientes Cloud (AWS/Azure).
+## Features principais
+### Cliente
+- Cadastro com validacoes de CPF, telefone, email, data de nascimento e senha
+- Login com `cpf + email + senha`
+- Primeiro acesso com bonus transacional e persistencia de `primeiroLogin=false`
+- Dashboard com saldo e area PIX
 
-### ☕ Back-end (Core API)
-* **Linguagem:** Java 17 LTS (Amazon Corretto Distro) - Foco em performance e garbage collection otimizado.
-* **Framework:** Spring Boot 3.2.0 - Aproveitando a stack nativa e Jakarta EE.
-* **Persistência:** Spring Data JPA + Hibernate (ORM).
-* **Validação:** Bean Validation (Hibernate Validator).
-* **Utilitários:** Lombok (Redução de boilerplate) e ModelMapper.
-* **Build Tool:** Maven 3.8+.
+### Gerente
+- Login administrativo por email/senha
+- Painel com paginacao e filtros
+- Aprovacao/recusa/suspensao/bloqueio conforme transicoes validas
+- Exclusao de cliente com tratamento de vinculos
 
-### ⚛️ Front-end (Client & Admin)
-* **Runtime:** Node.js 20+ (LTS).
-* **Framework:** React 18.2 (Hooks & Functional Components).
-* **Build Tool:** Vite 5 (Build ultra-rápido com ESModules).
-* **Estilização:** TailwindCSS 3.4 (Utility-First Architecture).
-* **UX/UI:** Framer Motion (Animações declarativas) & Lucide React (Ícones vetoriais).
-* **HTTP Client:** Axios (Interceptors & Async/Await).
+### Seguranca
+- JWT em cookie HttpOnly (`NETBANK_AUTH`)
+- CSRF (`XSRF-TOKEN` / `X-XSRF-TOKEN`)
+- Captcha humano
+- Protecao anti-bruteforce de login persistida em banco
+- Auditoria de operacoes criticas
 
-### 🏗️ Infraestrutura & DevOps
-* **Database:** PostgreSQL 15 (Imagem Oficial Docker).
-* **Containerização:** Docker Compose V2 (Orquestração de serviços).
-* **Versionamento:** Git com estratégia de Monorepo.
+### Dados e migracoes
+- Flyway como fonte unica de schema (`backend/src/main/resources/db/migration`)
+- Sem SQL init magico
+- `ddl-auto=validate` nos perfis de aplicacao
 
----
+## Fluxos demo
+1. Cadastro de cliente
+2. Login gerente + aprovacao da conta
+3. Login cliente
+4. Primeiro acesso aplica bonus e desliga flag `primeiroLogin`
+5. Gerente altera status e o comportamento de login muda conforme regra
 
-## 📐 Arquitetura do Sistema
+## Endpoints principais
+### Auth
+- `POST /auth/login`
+- `POST /auth/logout`
+- `GET /auth/me`
+- `GET /auth/csrf`
+- `GET /auth/captcha/challenge`
+- `POST /auth/captcha/verify`
 
-O sistema foi desenhado seguindo os princípios de **Clean Code** e **SOLID**, garantindo manutenibilidade.
+### Usuarios
+- `POST /usuarios`
+- `GET /usuarios/{id}`
+- `GET /usuarios/paginado`
+- `PATCH /usuarios/{id}/primeiro-acesso-concluido`
+- `PATCH /usuarios/{id}/status`
+- `DELETE /usuarios/{id}`
 
-### Destaques de Engenharia:
-1.  **Isolamento de Domínio:** Entidades JPA separadas dos DTOs (Data Transfer Objects) para segurança da API.
-2.  **Service Layer Pattern:** Regras de negócio (ex: validação de saldo, lógica de Pix) encapsuladas em serviços, não nos Controllers.
-3.  **Tratamento de Exceções Global:** `@ControllerAdvice` para padronização de erros HTTP (404, 400, 500) em JSON.
-4.  **CORS Configurado:** Permissão explícita para comunicação segura entre o Front (Porta 5173) e Back (Porta 8080).
+### PIX
+- `GET /pix/status/{usuarioId}`
+- `POST /pix/configurar-senha`
+- `POST /pix/registrar-chave`
+- `GET /pix/preview/{chave}`
+- `POST /pix/transferir`
 
----
-
-## ⚡ Quick Start (Rodando Localmente)
-
-### Pré-requisitos
-* **Docker Desktop** (Obrigatório para o Banco)
-* **Java JDK 17** (Preferencialmente Amazon Corretto 17)
-* **Node.js 18+**
-
-
-## 🚀 Guia de Instalação e Execução
-
-Siga rigorosamente os passos abaixo para replicar o ambiente em sua máquina local.
-
-### Clonando o Repositório
-Abra o terminal na pasta onde deseja salvar o projeto e execute:
-```bash
-git clone [https://github.com/NetoDev-0ps/NetBank-System.git](https://github.com/NetoDev-0ps/NetBank-System.git)
-cd NetBank-System
-````
-### 1️⃣ Infraestrutura (Banco de Dados)
-Suba o container do PostgreSQL em modo *detached*:
-```bash
-cd database
-docker-compose up -d
-```
-### 2️⃣ Back-end (API)
-Compile e execute a aplicação Spring Boot:
+## Setup rapido (Windows)
+### 1) Preparar arquivos `.env`
 ```bash
 cd backend
+copy .env.example .env
+cd ..\frontend
+copy .env.example .env
+cd ..\database
+copy .env.example .env
 ```
-## Windows
-```bash
-mvnw spring-boot:run
-```
-## Linux/Mac
-```bash
-./mvnw spring-boot:run
-```
-A API estará disponível em: http://localhost:8080
 
-### 3️⃣ Front-end (Interface)
-Instale as dependências e inicie o servidor de desenvolvimento Vite:
+### 2) Reset limpo do banco
+```bash
+powershell -ExecutionPolicy Bypass -File scripts/reset-dev.ps1
+```
+
+### 3) Subir stack completa (DB + backend + frontend)
+```bash
+powershell -ExecutionPolicy Bypass -File scripts/start-dev.ps1
+```
+
+### 4) Acesso local
+- Front: `http://localhost:5173`
+- API: `http://localhost:8080`
+
+### 5) Acesso pelo celular (mesma rede)
+Use o script com host aberto e API no IP local:
+```bash
+powershell -ExecutionPolicy Bypass -File scripts/start-dev.ps1 -FrontendHost 0.0.0.0 -ApiUrl http://SEU_IP_LOCAL:8080
+```
+Abra no celular: `http://SEU_IP_LOCAL:5173`
+
+## Variaveis de ambiente
+- Backend: `backend/.env.example`
+- Frontend: `frontend/.env.example`
+- Database: `database/.env.example`
+
+## Qualidade e testes
+### Backend
+```bash
+cd backend
+cmd /c mvnw.cmd -q verify
+```
+
+### Frontend
 ```bash
 cd frontend
-npm install
-npm run dev
+npm run test:coverage
+npm run lint
+npm run build
+npm run test:e2e
 ```
-O App estará disponível em: http://localhost:5173
 
-### 🔑 Credenciais para Teste (Seed Data)
+## CI
+Pipeline em `.github/workflows/ci.yml` com:
+- backend `verify` + package
+- frontend coverage + lint + build + e2e
 
-Utilize as contas abaixo para explorar as diferentes permissões do sistema:
+## E2E coberto
+- Smoke de autenticacao gerente
+- Cadastro -> aprovacao gerente -> login cliente
+- Primeiro acesso -> bonus -> persistencia de `primeiroLogin=false`
+- Suspensao/reativacao de cliente alterando comportamento de login
 
-| Perfil | Email | Senha |
-| :--- | :--- | :--- |
-| **Gerente (Admin)** | `admin@netbank.com.br` | `admin123` |
-| **Cliente** | *(Criar via tela de cadastro)* | *(Sua escolha)* |
+## Galeria
+### Demo GIF
+![Demo Flow](docs/assets/screenshots/demo-flow.gif)
+
+### Capturas
+![Tela 1](docs/assets/screenshots/01-business-people.png)
+![Tela 2](docs/assets/screenshots/02-app-interface.png)
+![Tela 3](docs/assets/screenshots/03-credit-cards.png)
+
+## Decisoes tecnicas
+- Maquina de estados de conta no backend (transicoes invalidas retornam erro estavel)
+- Primeiro acesso fechado ponta a ponta (persistencia + retorno atualizado)
+- Sessao confirmada por backend (`/auth/me`) para evitar falso positivo de login no front
+- Delete de usuario com limpeza de vinculos para evitar quebra de integridade
+
+## Publicacao final
+Checklist de fechamento em: `docs/runbooks/final-freeze-checklist.md`
+
+## Credenciais dev (bootstrap)
+- Gerente: `admin@netbank.com.br`
+- Senha inicial: definida via `ADMIN_PASSWORD_HASH` no `.env` do backend
+
+## Deploy publico (portfolio)
+- Backend + Postgres: `render.yaml` (Render Blueprint)
+- Frontend: `frontend/vercel.json` (Vercel)
+- Guia completo: `docs/runbooks/deploy-portfolio.md`
+
+## Governanca GitHub
+- CI obrigatorio no `main`: `.github/workflows/ci.yml`
+- CodeQL: `.github/workflows/codeql.yml`
+- Secret scanning: `.github/workflows/secret-scan.yml`
+- Dependabot: `.github/dependabot.yml`
+- Regras de branch protection: `.github/required-checks.md`
+
+## Release oficial
+### Validacao completa em maquina limpa
+```bash
+powershell -ExecutionPolicy Bypass -File scripts/validate-clean-machine.ps1
+```
+
+### Criar tag da release
+```bash
+powershell -ExecutionPolicy Bypass -File scripts/release-tag.ps1 -Version 1.0.1 -SkipChecks
+```
+
+### Publicar
+```bash
+git push origin main --tags
+```
+
+## Links de demonstracao (preencher apos deploy)
+- Frontend: `https://SEU_FRONTEND`
+- API: `https://SUA_API`
+- Health: `https://SUA_API/actuator/health`\n\n## Licenca
+MIT - ver arquivo [LICENSE](LICENSE).
+

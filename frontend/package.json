@@ -7,11 +7,16 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node tests/run-tests.mjs",
+    "test:watch": "node --watch tests/run-tests.mjs",
+    "test:coverage": "c8 --check-coverage --lines 80 --functions 80 --branches 70 --statements 80 --reporter=text --reporter=lcov node tests/run-tests.mjs",
+    "test:e2e": "playwright test",
+    "test:e2e:install": "playwright install chromium"
   },
   "dependencies": {
     "axios": "^1.13.5",
-    "framer-motion": "^12.34.0",
+    "framer-motion": "^12.34.3",
     "lucide-react": "^0.563.0",
     "prop-types": "^15.8.1",
     "react": "^19.2.0",
@@ -20,10 +25,12 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@playwright/test": "^1.58.2",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
     "autoprefixer": "^10.4.24",
+    "c8": "^11.0.0",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",

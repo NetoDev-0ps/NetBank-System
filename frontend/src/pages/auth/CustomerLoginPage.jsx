@@ -1,314 +1,353 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-// eslint-disable-next-line no-unused-vars
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Lock,
-  ArrowRight,
-  CreditCard,
-  Mail,
-  Loader2,
-  ArrowLeft,
-} from "lucide-react";
+import { ChevronLeft, Lock, Mail, ShieldAlert, UserRound } from "lucide-react";
 import api from "../../core/api/apiClient";
+import { ensureCsrfToken } from "../../core/auth/csrf";
+import { useAuth } from "../../core/contexts/AuthContext";
+import HumanPuzzleCaptcha from "../../shared/ui/HumanPuzzleCaptcha";
+import WindSense from "../../shared/effects/WindFlowCanvas";
+import T from "../../shared/ui/Translate";
 
-const LoginCliente = () => {
+const STATUS_BLOCK_MESSAGES = {
+  STATUS_PENDENTE: {
+    title: "Conta em analise",
+    message:
+      "Seu cadastro ainda esta em validacao pelo time de compliance. Tente novamente em alguns minutos.",
+  },
+  STATUS_RECUSADO: {
+    title: "Cadastro recusado",
+    message:
+      "Seu cadastro foi recusado. Entre em contato com o suporte para revisar a situacao.",
+  },
+  STATUS_SUSPENSO: {
+    title: "Conta suspensa",
+    message:
+      "Sua conta esta suspensa temporariamente. Procure o suporte para regularizacao.",
+  },
+  STATUS_BLOQUEADO: {
+    title: "Conta bloqueada",
+    message:
+      "Sua conta foi bloqueada por seguranca. Fale com o suporte para investigacao.",
+  },
+};
+
+const mapCustomerError = (error) => {
+  const code = error.response?.data?.erro;
+
+  if (STATUS_BLOCK_MESSAGES[code]) {
+    return { type: "status", code };
+  }
+
+  switch (code) {
+    case "CPF_OBRIGATORIO":
+      return { type: "inline", message: "Informe o CPF para continuar." };
+    case "EMAIL_OBRIGATORIO":
+      return { type: "inline", message: "Informe o e-mail para continuar." };
+    case "SENHA_OBRIGATORIA":
+      return { type: "inline", message: "Informe a senha para continuar." };
+    case "EMAIL_NAO_ENCONTRADO":
+      return { type: "inline", message: "E-mail nao encontrado." };
+    case "DADOS_DIVERGENTES":
+      return {
+        type: "inline",
+        message: "CPF e e-mail nao pertencem ao mesmo titular.",
+      };
+    case "SENHA_INCORRETA":
+      return { type: "inline", message: "Senha incorreta." };
+    case "TIPO_ACESSO_INVALIDO":
+      return { type: "inline", message: "Acesso invalido para este perfil." };
+    case "LOGIN_BLOQUEADO_TEMPORARIAMENTE":
+      return {
+        type: "inline",
+        message: "Muitas tentativas de login. Aguarde alguns minutos e tente novamente.",
+      };
+    case "CAPTCHA_PROOF_AUSENTE":
+    case "CAPTCHA_PROOF_INVALIDO":
+    case "CAPTCHA_PROOF_REUTILIZADO":
+    case "CAPTCHA_PROOF_IP_INVALIDO":
+      return { type: "inline", message: "Refaca a verificacao humana para continuar." };
+    default:
+      return {
+        type: "inline",
+        message:
+          error.response?.data?.erro ||
+          error.response?.data?.message ||
+          "Nao foi possivel concluir o login.",
+      };
+  }
+};
+
+function CustomerLoginPage() {
   const navigate = useNavigate();
+  const { loginCustomer, isCustomerAuthenticated, isManagerAuthenticated } = useAuth();
 
-  // Estados de Controle de Fluxo
-  const [passo, setPasso] = useState(1); // 1: CPF, 2: Email, 3: Senha, 4: Sincronizando
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  // Estados dos Dados
   const [cpf, setCpf] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [statusBlock, setStatusBlock] = useState(null);
+  const [captchaState, setCaptchaState] = useState({ verified: false, proofToken: "" });
+  const [captchaRefresh, setCaptchaRefresh] = useState(0);
 
-  // Máscara de CPF automática (UX)
-  // Validação de transição entre cards
-  const validarEProsseguir = () => {
-    setError("");
-    if (passo === 1) {
-      if (cpf.length < 14)
-        return setError("Informe um CPF válido para continuar.");
-      setPasso(2);
-    } else if (passo === 2) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email))
-        return setError("Formato de e-mail inválido.");
-      setPasso(3);
+  useEffect(() => {
+    ensureCsrfToken().catch(() => {
+      // token sera renovado automaticamente na proxima chamada
+    });
+  }, []);
+
+  useEffect(() => {
+    if (isManagerAuthenticated) {
+      navigate("/painel", { replace: true });
+      return;
+    }
+
+    if (isCustomerAuthenticated) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [isCustomerAuthenticated, isManagerAuthenticated, navigate]);
+
+  const onCpfChange = (event) => {
+    let value = event.target.value.replace(/\D/g, "");
+    value = value
+      .replace(/(\d{3})(\d)/, "$1.$2")
+      .replace(/(\d{3})(\d)/, "$1.$2")
+      .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+    setCpf(value.slice(0, 14));
+  };
+
+  const concluirPrimeiroAcesso = async (user) => {
+    if (!user?.id || !user?.primeiroLogin) {
+      return user;
+    }
+
+    try {
+      const response = await api.patch(`/usuarios/${user.id}/primeiro-acesso-concluido`);
+      const atualizado = response.data?.usuario;
+
+      if (!atualizado) {
+        throw new Error("PRIMEIRO_ACESSO_RESPOSTA_INVALIDA");
+      }
+
+      return atualizado;
+    } catch {
+      setError("Nao foi possivel concluir o primeiro acesso. Tente novamente.");
+      return null;
     }
   };
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setError("");
+    setStatusBlock(null);
+
+    if (!captchaState.verified || !captchaState.proofToken) {
+      setError("Conclua a verificacao humana para continuar.");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      // Chamada para o Back-end Java
-      const response = await api.post("/usuarios/login", { email, senha });
-      const usuarioLogado = response.data;
+      const response = await api.post(
+        "/auth/login",
+        {
+          tipoAcesso: "CLIENTE",
+          cpf,
+          email: email.trim(),
+          senha,
+        },
+        {
+          headers: {
+            "X-Captcha-Proof": captchaState.proofToken,
+          },
+        },
+      );
 
-      // Validação de Status (Regra de Negócio)
-      if (usuarioLogado.status !== "ACEITO") {
-        setError("Sua conta ainda está em análise. Procure o gerente.");
-        setLoading(false);
-        setPasso(1); // Retorna ao início para segurança
+      const usuario = response.data?.usuario;
+      if (!usuario) {
+        setError("Resposta de autenticacao invalida.");
         return;
       }
 
-      // Persistência de Sessão
-      localStorage.setItem("cliente_dados", JSON.stringify(usuarioLogado));
-      localStorage.setItem("cliente_token", "active_session_token");
+      const usuarioAtualizado = await concluirPrimeiroAcesso(usuario);
+      if (!usuarioAtualizado) {
+        return;
+      }
 
-      // Gatilho da Tela de Sincronização Final
-      setPasso(4);
-      setTimeout(() => navigate("/dashboard"), 2500);
-    } catch (err) {
-      const msg =
-        err.response?.data?.erro || "Senha incorreta ou usuário inexistente.";
-      setError(msg);
+      loginCustomer(usuarioAtualizado);
+      navigate("/dashboard", { replace: true });
+    } catch (requestError) {
+      const parsed = mapCustomerError(requestError);
+      if (parsed.type === "status") {
+        setStatusBlock(parsed.code);
+      } else {
+        setError(parsed.message);
+      }
+      setCaptchaRefresh((value) => value + 1);
+    } finally {
       setLoading(false);
     }
   };
 
-  // Configurações de Animação (Motion Variants)
-  const variants = {
-    enter: { opacity: 0, x: 20 },
-    center: { opacity: 1, x: 0 },
-    exit: { opacity: 0, x: -20 },
-  };
-
-  // RENDERIZAÇÃO DA TELA DE LOADING FINAL
-  if (passo === 4) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen transition-colors duration-500 bg-[#BFCEF5] dark:bg-slate-950 text-slate-800 dark:text-white">
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="flex flex-col items-center"
-        >
-          <div className="relative mb-6">
-            <div className="w-16 h-16 border-4 rounded-full border-blue-500/20 border-t-blue-500 animate-spin" />
-            <Lock
-              className="absolute text-blue-500 -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2"
-              size={24}
-            />
-          </div>
-          <h2 className="text-xl font-bold tracking-tight">
-            Criptografando conexão...
-          </h2>
-          <p className="mt-2 text-sm text-blue-900/70 dark:text-slate-400">
-            Acessando ambiente seguro NetBank.
-          </p>
-        </motion.div>
-      </div>
-    );
-  }
-
-  const handleCpfChange = (e) => {
-    let value = e.target.value;
-
-    // 1. Remove tudo que não for número (evita letras e símbolos)
-    value = value.replaceAll(/\D/g, "");
-
-    // 2. Aplica a máscara progressivamente conforme o tamanho
-    value = value.replace(/(\d{3})(\d)/, "$1.$2"); // Coloca o primeiro ponto
-    value = value.replace(/(\d{3})(\d)/, "$1.$2"); // Coloca o segundo ponto
-    value = value.replace(/(\d{3})(\d{1,2})$/, "$1-$2"); // Coloca o hífen
-
-    // 3. Atualiza o estado (limitando a 14 caracteres: 000.000.000-00)
-    if (value.length <= 14) {
-      setCpf(value);
-    }
-  };
-
   return (
-    <div className="flex items-center justify-center min-h-screen p-4 font-sans transition-colors duration-500 bg-[#BFCEF5] dark:bg-slate-950 text-slate-800 dark:text-blue-100">
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-blue-600/10 dark:bg-blue-600/20 rounded-full blur-[120px]" />
+    <div className="nb-page flex items-center justify-center p-4 sm:p-6">
+      <div className="fixed inset-0 pointer-events-none opacity-30">
+        <WindSense />
       </div>
 
-      <motion.div
-        layout
-        className="relative w-full max-w-md p-8 overflow-hidden border shadow-2xl bg-white/40 dark:bg-slate-900/60 border-blue-900/10 dark:border-slate-800 rounded-3xl backdrop-blur-xl"
-      >
-        <header className="mb-8 text-center">
-          <img src="/logo02.png" alt="NetBank" className="h-12 mx-auto mb-6" />
-
-          {/* Barra de Progresso Visual */}
-          <div className="flex justify-center gap-2 mb-4">
-            {[1, 2, 3].map((s) => (
-              <div
-                key={s}
-                className={`h-1 w-10 rounded-full transition-all duration-500 ${passo >= s ? "bg-blue-600 dark:bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" : "bg-blue-900/10 dark:bg-slate-800"}`}
-              />
-            ))}
+      {statusBlock && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+          <div className="w-full max-w-md p-6 border shadow-2xl bg-white/95 dark:bg-slate-900/95 rounded-2xl border-slate-200 dark:border-slate-700">
+            <h2 className="text-xl font-black text-slate-900 dark:text-white">
+              <T>{STATUS_BLOCK_MESSAGES[statusBlock].title}</T>
+            </h2>
+            <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
+              <T>{STATUS_BLOCK_MESSAGES[statusBlock].message}</T>
+            </p>
+            <button
+              type="button"
+              onClick={() => setStatusBlock(null)}
+              className="nb-button-primary w-full mt-6"
+            >
+              <T>Fechar</T>
+            </button>
           </div>
-        </header>
+        </div>
+      )}
 
-        <AnimatePresence mode="wait">
-          {/* PASSO 1: CPF */}
-          {passo === 1 && (
-            <motion.div
-              key="step1"
-              variants={variants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              className="space-y-6"
-            >
-              <div className="space-y-2">
-                <h2 className="text-xl font-bold text-slate-800 dark:text-white">Seja bem-vindo</h2>
-                <p className="text-sm text-blue-900/70 dark:text-slate-400">
-                  Informe seu CPF para começar o acesso.
-                </p>
-              </div>
-              <div className="relative group">
-                <CreditCard
-                  className="absolute left-4 top-3.5 text-blue-900/40 dark:text-slate-500 group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400 transition"
-                  size={20}
-                />
-                <input
-                  type="text"
-                  value={cpf} // O estado que armazena o valor formatado
-                  onChange={handleCpfChange} // A função que acabamos de criar
-                  placeholder="000.000.000-00"
-                  maxLength="14" // Segurança extra para não passar do tamanho
-                  className="w-full p-3.5 pl-12 bg-white/50 dark:bg-slate-950/50 border border-blue-900/20 dark:border-slate-700 rounded-xl outline-none text-slate-800 dark:text-white placeholder-blue-900/40 dark:placeholder-slate-500 focus:border-blue-500 transition"
-                />
-              </div>
-              <button
-                onClick={validarEProsseguir}
-                className="flex items-center justify-center w-full gap-2 py-4 font-bold text-white transition bg-blue-600 rounded-xl hover:bg-blue-500"
-              >
-                Próximo <ArrowRight size={18} />
-              </button>
-            </motion.div>
-          )}
+      <div className="nb-shell max-w-5xl">
+        <div className="grid overflow-hidden nb-card lg:grid-cols-[1fr,1.2fr]">
+          <aside className="hidden lg:flex flex-col justify-between p-8 bg-gradient-to-br from-brand-primary to-brand-secondary text-white">
+            <Link to="/home" className="inline-flex items-center gap-1 text-xs font-bold text-blue-100 hover:text-white w-max">
+              <ChevronLeft size={15} />
+              <T>Inicio</T>
+            </Link>
 
-          {/* PASSO 2: EMAIL */}
-          {passo === 2 && (
-            <motion.div
-              key="step2"
-              variants={variants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              className="space-y-6"
-            >
-              <button
-                onClick={() => setPasso(1)}
-                className="flex items-center gap-2 text-xs font-bold transition text-blue-900/60 dark:text-slate-500 hover:text-blue-700 dark:hover:text-blue-400"
-              >
-                <ArrowLeft size={14} /> VOLTAR AO CPF
-              </button>
-              <div className="space-y-2">
-                <h2 className="text-xl font-bold text-slate-800 dark:text-white">
-                  Confirme seu e-mail
-                </h2>
-                <p className="text-sm text-blue-900/70 dark:text-slate-400">
-                  Utilize o e-mail cadastrado na sua conta.
-                </p>
-              </div>
-              <div className="relative group">
-                <Mail
-                  className="absolute left-4 top-3.5 text-blue-900/40 dark:text-slate-500 group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400 transition"
-                  size={20}
-                />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="seu@email.com"
-                  className="w-full p-3.5 pl-12 bg-white/50 dark:bg-slate-950/50 border border-blue-900/20 dark:border-slate-700 rounded-xl outline-none text-slate-800 dark:text-white placeholder-blue-900/40 dark:placeholder-slate-500 focus:border-blue-500 transition"
-                />
-              </div>
-              <button
-                onClick={validarEProsseguir}
-                className="flex items-center justify-center w-full gap-2 py-4 font-bold text-white transition bg-blue-600 rounded-xl hover:bg-blue-500"
-              >
-                Confirmar e-mail <ArrowRight size={18} />
-              </button>
-            </motion.div>
-          )}
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.2em] font-black text-blue-100/80">
+                <T>Conta pessoal</T>
+              </p>
+              <h2 className="mt-3 text-3xl font-black leading-tight">
+                <T>Bem-vindo ao NetBank</T>
+              </h2>
+              <p className="mt-4 text-sm text-blue-100/90">
+                <T>Use CPF, e-mail e senha para entrar com dupla validacao e mais seguranca.</T>
+              </p>
+            </div>
 
-          {/* PASSO 3: SENHA */}
-          {passo === 3 && (
-            <motion.div
-              key="step3"
-              variants={variants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              className="space-y-6"
-            >
-              <button
-                onClick={() => setPasso(2)}
-                className="flex items-center gap-2 text-xs font-bold transition text-blue-900/60 dark:text-slate-500 hover:text-blue-700 dark:hover:text-blue-400"
-              >
-                <ArrowLeft size={14} /> VOLTAR AO E-MAIL
-              </button>
-              <div className="space-y-2">
-                <h2 className="text-xl font-bold text-slate-800 dark:text-white">
-                  Senha de acesso
-                </h2>
-                <p className="text-sm text-blue-900/70 dark:text-slate-400">
-                  Insira sua senha de 6 ou mais dígitos.
-                </p>
+            <div className="nb-card-soft !bg-white/10 !border-white/20 p-4 text-xs">
+              <div className="flex items-start gap-2">
+                <ShieldAlert size={14} className="mt-0.5" />
+                <T>O CPF e exigido somente para cliente como camada adicional de identidade.</T>
               </div>
-              <form onSubmit={handleLogin} className="space-y-6">
-                <div className="relative group">
-                  <Lock
-                    className="absolute left-4 top-3.5 text-blue-900/40 dark:text-slate-500 group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400 transition"
-                    size={20}
+            </div>
+          </aside>
+
+          <section className="p-5 sm:p-8">
+            <div className="mb-6 lg:hidden">
+              <Link to="/home" className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 dark:text-slate-300">
+                <ChevronLeft size={15} />
+                <T>Inicio</T>
+              </Link>
+            </div>
+
+            <header className="mb-6">
+              <img src="/brand-logo-primary.png" alt="NetBank" className="h-10 mb-5" />
+              <h1 className="text-2xl font-black text-slate-900 dark:text-white">
+                <T>Login do Cliente</T>
+              </h1>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                <T>Acesse sua conta digital com seguranca.</T>
+              </p>
+            </header>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="nb-label">
+                  <T>CPF</T>
+                </label>
+                <div className="relative mt-2">
+                  <UserRound size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    value={cpf}
+                    onChange={onCpfChange}
+                    placeholder="000.000.000-00"
+                    className="nb-input pl-10"
+                    required
                   />
+                </div>
+              </div>
+
+              <div>
+                <label className="nb-label">
+                  <T>E-mail</T>
+                </label>
+                <div className="relative mt-2">
+                  <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder="seu@email.com"
+                    className="nb-input pl-10"
+                    autoComplete="username"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="nb-label">
+                  <T>Senha</T>
+                </label>
+                <div className="relative mt-2">
+                  <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
                     type="password"
                     value={senha}
-                    onChange={(e) => setSenha(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full p-3.5 pl-12 bg-white/50 dark:bg-slate-950/50 border border-blue-900/20 dark:border-slate-700 rounded-xl outline-none text-slate-800 dark:text-white placeholder-blue-900/40 dark:placeholder-slate-500 focus:border-blue-500 transition"
-                    autoFocus
+                    onChange={(event) => setSenha(event.target.value)}
+                    placeholder="********"
+                    className="nb-input pl-10"
+                    autoComplete="current-password"
+                    required
                   />
                 </div>
+              </div>
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-4 font-bold text-white transition rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:to-blue-600 disabled:opacity-50"
-                >
-                  {loading ? "Autenticando..." : "Entrar no NetBank"}
-                </button>
-              </form>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              <HumanPuzzleCaptcha
+                onVerified={setCaptchaState}
+                refreshSignal={captchaRefresh}
+                disabled={loading}
+              />
 
-        {error && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="p-3 mt-4 text-xs font-bold text-center text-red-600 bg-red-100 border border-red-200 rounded-lg dark:text-red-300 dark:bg-red-900/20 dark:border-red-900/50"
-          >
-            {error}
-          </motion.div>
-        )}
+              <button
+                type="submit"
+                disabled={loading || !captchaState.verified || !captchaState.proofToken}
+                className="nb-button-primary w-full"
+              >
+                {loading ? <T>Entrando...</T> : <T>Entrar</T>}
+              </button>
 
-        <footer className="mt-8 text-center">
-          <Link
-            to="/cadastro-cliente"
-            className="text-sm transition text-blue-900/70 dark:text-slate-400 hover:text-blue-800 dark:hover:text-white"
-          >
-            Não tem conta?{" "}
-            <span className="font-bold text-blue-600 dark:text-blue-400">Abra agora</span>
-          </Link>
-        </footer>
-      </motion.div>
+              {error && (
+                <div className="p-3 text-xs font-bold text-center text-rose-700 bg-rose-100 border border-rose-200 rounded-xl dark:text-rose-300 dark:bg-rose-900/20 dark:border-rose-900/40">
+                  <T>{error}</T>
+                </div>
+              )}
+
+              <div className="pt-1 text-xs text-center text-slate-600 dark:text-slate-400">
+                <Link to="/login-gerente" className="font-bold text-brand-primary hover:text-brand-secondary dark:text-brand-accent">
+                  <T>Sou gerente</T>
+                </Link>
+              </div>
+            </form>
+          </section>
+        </div>
+      </div>
     </div>
   );
-};
+}
 
-export default LoginCliente;
+export default CustomerLoginPage;
+

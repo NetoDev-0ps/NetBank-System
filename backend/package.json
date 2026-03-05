@@ -1,7 +1,7 @@
 {
   "name": "netbank-backend",
   "version": "1.0.0",
-  "description": "Banco Digital - Camada de Negócio Java",
+  "description": "Banco Digital - Camada de Negocio Java",
   "main": "index.js",
   "scripts": {
     "format": "prettier --write \"src/**/*.java\""

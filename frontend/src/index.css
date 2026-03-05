@@ -1,31 +1,176 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --nb-light-bg: #f4f9ff;
+    --nb-light-surface: #ffffff;
+    --nb-light-muted: #eaf2ff;
+
+    --nb-dark-bg: #0b1529;
+    --nb-dark-surface: #0f1b33;
+    --nb-dark-muted: #132340;
+  }
+
+  * {
+    @apply box-border;
+  }
+
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
   body {
-    /* Transição global de 500ms para suavidade executiva */
-    @apply transition-colors duration-500 ease-in-out antialiased;
+    @apply font-sans antialiased text-slate-900 dark:text-blue-50;
+    @apply bg-[var(--nb-light-bg)] dark:bg-[var(--nb-dark-bg)];
+    @apply transition-colors duration-300;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 4.4vw, 3.6rem);
+    @apply leading-[1.08] font-black tracking-tight;
+  }
+
+  h2 {
+    font-size: clamp(1.6rem, 3.4vw, 2.6rem);
+    @apply leading-tight font-extrabold tracking-tight;
+  }
+
+  p {
+    @apply leading-relaxed;
+  }
+
+  input,
+  textarea,
+  select,
+  button {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/70;
   }
 }
 
-/* Modo White: Sua cor exata #BFCEF5 */
-.light {
-  background-color: #BFCEF5;
-  color: #1e293b; /* Texto slate-800 para contraste perfeito no azul claro */
+@layer components {
+  .nb-page {
+    @apply min-h-screen relative overflow-x-hidden;
+    @apply bg-gradient-to-b from-netlight-50 via-[#eef6ff] to-[#e8f3ff];
+    @apply dark:bg-gradient-to-b dark:from-netdark-600 dark:via-[#0d1a33] dark:to-[#071227];
+  }
+
+  .nb-shell {
+    @apply relative mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+
+  .nb-card {
+    @apply rounded-3xl border border-slate-200/80 bg-white/85 shadow-xl backdrop-blur;
+    @apply dark:border-slate-800 dark:bg-slate-900/80;
+  }
+
+  .nb-card-soft {
+    @apply rounded-2xl border border-blue-100 bg-blue-50/70;
+    @apply dark:border-blue-900/40 dark:bg-blue-950/25;
+  }
+
+  .nb-topbar {
+    @apply sticky top-0 z-40 border-b border-slate-200/80 bg-white/80 backdrop-blur;
+    @apply dark:border-slate-800 dark:bg-slate-900/80;
+  }
+
+  .nb-input {
+    @apply w-full rounded-xl border border-slate-300 bg-white px-3 py-3 text-sm text-slate-800;
+    @apply placeholder:text-slate-400 focus:border-brand-primary;
+    @apply dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500;
+  }
+
+  .nb-label {
+    @apply text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400;
+  }
+
+  .nb-button-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3;
+    @apply text-xs font-black uppercase tracking-widest text-white;
+    @apply bg-gradient-to-r from-brand-primary to-brand-secondary;
+    @apply hover:from-brand-secondary hover:to-brand-primary transition;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .nb-button-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3;
+    @apply text-xs font-black uppercase tracking-widest;
+    @apply border border-blue-300 bg-blue-50 text-blue-800 transition;
+    @apply hover:bg-blue-100;
+    @apply dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-200 dark:hover:bg-blue-900/40;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .nb-button-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3;
+    @apply text-xs font-black uppercase tracking-widest;
+    @apply border border-slate-300 text-slate-700 transition hover:bg-slate-100;
+    @apply dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .nb-button-danger {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3;
+    @apply text-xs font-black uppercase tracking-widest text-white;
+    @apply bg-rose-600 hover:bg-rose-500 transition;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .nb-glow {
+    @apply pointer-events-none absolute rounded-full blur-3xl opacity-60;
+  }
+
+  .glass-card {
+    @apply nb-card;
+  }
+
+  .btn-premium {
+    @apply nb-button-primary;
+  }
+
+  .btn-primary {
+    @apply nb-button-primary;
+  }
+
+  .btn-secondary {
+    @apply nb-button-secondary;
+  }
 }
 
-/* Modo Dark: Original */
-.dark {
-  background-color: #050505;
-  color: #ffffff;
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-/* Visibilidade do Vento WindSense */
-.light .wind-canvas {
-  opacity: 0.4; /* Aumentamos para o azul aparecer no fundo claro */
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-.dark .wind-canvas {
-  opacity: 0.6;
+::-webkit-scrollbar-thumb {
+  background: rgba(30, 77, 162, 0.35);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(30, 77, 162, 0.55);
+}
+
+@keyframes nb-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.nb-fade-up {
+  animation: nb-fade-up 0.5s ease-out both;
 }
