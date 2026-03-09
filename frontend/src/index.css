@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -6,13 +6,39 @@
 
 @layer base {
   :root {
-    --nb-light-bg: #f4f9ff;
-    --nb-light-surface: #ffffff;
-    --nb-light-muted: #eaf2ff;
+    --nb-bg: #f4f8ff;
+    --nb-bg-soft: #e9f2ff;
+    --nb-surface: #ffffff;
+    --nb-surface-2: #f5f9ff;
+    --nb-border: #d8e5ff;
+    --nb-text: #0d1b34;
+    --nb-text-soft: #4a6187;
+    --nb-primary: #1e4da2;
+    --nb-primary-2: #0f3b98;
+    --nb-accent: #2a85d4;
+    --nb-accent-soft: #60b8ff;
+    --nb-danger: #dc3a58;
+    --nb-success: #16a34a;
 
-    --nb-dark-bg: #0b1529;
-    --nb-dark-surface: #0f1b33;
-    --nb-dark-muted: #132340;
+    color-scheme: light;
+  }
+
+  .dark {
+    --nb-bg: #061128;
+    --nb-bg-soft: #0b1a35;
+    --nb-surface: #0f1d3c;
+    --nb-surface-2: #122347;
+    --nb-border: #223a67;
+    --nb-text: #edf4ff;
+    --nb-text-soft: #a9bcdf;
+    --nb-primary: #5b8cff;
+    --nb-primary-2: #8db2ff;
+    --nb-accent: #78c3ff;
+    --nb-accent-soft: #9fd9ff;
+    --nb-danger: #fb7185;
+    --nb-success: #4ade80;
+
+    color-scheme: dark;
   }
 
   * {
@@ -25,24 +51,43 @@
     min-height: 100%;
   }
 
+  html {
+    @apply scroll-smooth;
+  }
+
   body {
-    @apply font-sans antialiased text-slate-900 dark:text-blue-50;
-    @apply bg-[var(--nb-light-bg)] dark:bg-[var(--nb-dark-bg)];
-    @apply transition-colors duration-300;
+    margin: 0;
+    font-family: "Manrope", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    background:
+      radial-gradient(80vw 80vw at -8% -12%, color-mix(in srgb, var(--nb-accent) 16%, transparent), transparent 60%),
+      radial-gradient(70vw 70vw at 108% 0%, color-mix(in srgb, var(--nb-primary) 16%, transparent), transparent 62%),
+      linear-gradient(180deg, var(--nb-bg) 0%, var(--nb-bg-soft) 100%);
+    color: var(--nb-text);
+    @apply antialiased;
   }
 
-  h1 {
-    font-size: clamp(2rem, 4.4vw, 3.6rem);
-    @apply leading-[1.08] font-black tracking-tight;
-  }
-
-  h2 {
-    font-size: clamp(1.6rem, 3.4vw, 2.6rem);
-    @apply leading-tight font-extrabold tracking-tight;
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Sora", "Manrope", system-ui, sans-serif;
+    color: var(--nb-text);
+    @apply tracking-tight;
   }
 
   p {
+    color: var(--nb-text-soft);
     @apply leading-relaxed;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  img {
+    @apply max-w-full;
   }
 
   input,
@@ -55,90 +100,220 @@
 
 @layer components {
   .nb-page {
-    @apply min-h-screen relative overflow-x-hidden;
-    @apply bg-gradient-to-b from-netlight-50 via-[#eef6ff] to-[#e8f3ff];
-    @apply dark:bg-gradient-to-b dark:from-netdark-600 dark:via-[#0d1a33] dark:to-[#071227];
+    @apply relative min-h-screen overflow-x-hidden;
   }
 
   .nb-shell {
-    @apply relative mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
-  }
-
-  .nb-card {
-    @apply rounded-3xl border border-slate-200/80 bg-white/85 shadow-xl backdrop-blur;
-    @apply dark:border-slate-800 dark:bg-slate-900/80;
-  }
-
-  .nb-card-soft {
-    @apply rounded-2xl border border-blue-100 bg-blue-50/70;
-    @apply dark:border-blue-900/40 dark:bg-blue-950/25;
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
   }
 
   .nb-topbar {
-    @apply sticky top-0 z-40 border-b border-slate-200/80 bg-white/80 backdrop-blur;
-    @apply dark:border-slate-800 dark:bg-slate-900/80;
+    @apply sticky top-0 z-40 backdrop-blur-xl;
+    background-color: color-mix(in srgb, var(--nb-surface) 88%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--nb-border) 72%, transparent);
   }
 
-  .nb-input {
-    @apply w-full rounded-xl border border-slate-300 bg-white px-3 py-3 text-sm text-slate-800;
-    @apply placeholder:text-slate-400 focus:border-brand-primary;
-    @apply dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500;
+  .nb-hero-grid {
+    @apply grid gap-8 lg:grid-cols-2 lg:items-center;
   }
 
-  .nb-label {
-    @apply text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400;
+  .nb-card {
+    @apply rounded-3xl border shadow-xl;
+    background-color: color-mix(in srgb, var(--nb-surface) 92%, transparent);
+    border-color: color-mix(in srgb, var(--nb-border) 76%, transparent);
+    box-shadow:
+      0 18px 42px -26px rgba(19, 42, 90, 0.36),
+      0 4px 14px -8px rgba(19, 42, 90, 0.22);
+  }
+
+  .nb-card-soft {
+    @apply rounded-2xl border;
+    background-color: color-mix(in srgb, var(--nb-surface-2) 95%, transparent);
+    border-color: color-mix(in srgb, var(--nb-border) 72%, transparent);
+  }
+
+  .nb-glass {
+    @apply rounded-3xl border backdrop-blur-xl;
+    background-color: color-mix(in srgb, var(--nb-surface) 70%, transparent);
+    border-color: color-mix(in srgb, var(--nb-border) 68%, transparent);
+  }
+
+  .nb-panel {
+    @apply nb-card p-5 sm:p-6;
+  }
+
+  .nb-kpi {
+    @apply rounded-2xl border p-4;
+    background-color: color-mix(in srgb, var(--nb-surface) 92%, transparent);
+    border-color: color-mix(in srgb, var(--nb-border) 72%, transparent);
+  }
+
+  .nb-chip {
+    @apply inline-flex items-center gap-2 rounded-full border px-3 py-2 text-[10px] font-black uppercase tracking-[0.18em];
+    color: var(--nb-primary);
+    background-color: color-mix(in srgb, var(--nb-accent-soft) 16%, var(--nb-surface));
+    border-color: color-mix(in srgb, var(--nb-accent) 36%, transparent);
+  }
+
+  .nb-section-title {
+    font-size: clamp(1.5rem, 3vw, 2.3rem);
+    @apply font-extrabold leading-tight;
+  }
+
+  .nb-eyebrow {
+    @apply text-[10px] font-black uppercase tracking-[0.2em];
+    color: color-mix(in srgb, var(--nb-text-soft) 86%, var(--nb-text));
+  }
+
+  .nb-copy {
+    @apply text-sm sm:text-base;
+    color: var(--nb-text-soft);
+  }
+
+  .nb-btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-xs font-black uppercase tracking-[0.12em] transition-all duration-200;
+  }
+
+  .nb-btn-primary {
+    @apply nb-btn text-white;
+    background: linear-gradient(120deg, var(--nb-primary) 0%, var(--nb-accent) 100%);
+    box-shadow: 0 14px 28px -18px color-mix(in srgb, var(--nb-primary) 65%, transparent);
+  }
+
+  .nb-btn-primary:hover {
+    transform: translateY(-1px);
+    filter: saturate(1.08);
+  }
+
+  .nb-btn-secondary {
+    @apply nb-btn border;
+    color: var(--nb-primary);
+    background-color: color-mix(in srgb, var(--nb-surface) 90%, transparent);
+    border-color: color-mix(in srgb, var(--nb-primary) 28%, transparent);
+  }
+
+  .nb-btn-secondary:hover {
+    background-color: color-mix(in srgb, var(--nb-accent-soft) 16%, var(--nb-surface));
+  }
+
+  .nb-btn-ghost {
+    @apply nb-btn border;
+    color: color-mix(in srgb, var(--nb-text-soft) 90%, var(--nb-text));
+    background-color: color-mix(in srgb, var(--nb-surface) 74%, transparent);
+    border-color: color-mix(in srgb, var(--nb-border) 76%, transparent);
+  }
+
+  .nb-btn-ghost:hover {
+    background-color: color-mix(in srgb, var(--nb-surface) 92%, transparent);
+  }
+
+  .nb-btn-danger {
+    @apply nb-btn text-white;
+    background: linear-gradient(120deg, #f43f5e 0%, #e11d48 100%);
   }
 
   .nb-button-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3;
-    @apply text-xs font-black uppercase tracking-widest text-white;
-    @apply bg-gradient-to-r from-brand-primary to-brand-secondary;
-    @apply hover:from-brand-secondary hover:to-brand-primary transition;
-    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply nb-btn-primary;
   }
 
   .nb-button-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3;
-    @apply text-xs font-black uppercase tracking-widest;
-    @apply border border-blue-300 bg-blue-50 text-blue-800 transition;
-    @apply hover:bg-blue-100;
-    @apply dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-200 dark:hover:bg-blue-900/40;
-    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply nb-btn-secondary;
   }
 
   .nb-button-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3;
-    @apply text-xs font-black uppercase tracking-widest;
-    @apply border border-slate-300 text-slate-700 transition hover:bg-slate-100;
-    @apply dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800;
-    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply nb-btn-ghost;
   }
 
   .nb-button-danger {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3;
-    @apply text-xs font-black uppercase tracking-widest text-white;
-    @apply bg-rose-600 hover:bg-rose-500 transition;
-    @apply disabled:opacity-50 disabled:cursor-not-allowed;
-  }
-
-  .nb-glow {
-    @apply pointer-events-none absolute rounded-full blur-3xl opacity-60;
-  }
-
-  .glass-card {
-    @apply nb-card;
+    @apply nb-btn-danger;
   }
 
   .btn-premium {
-    @apply nb-button-primary;
+    @apply nb-btn-primary;
   }
 
   .btn-primary {
-    @apply nb-button-primary;
+    @apply nb-btn-primary;
   }
 
   .btn-secondary {
-    @apply nb-button-secondary;
+    @apply nb-btn-secondary;
+  }
+
+  .nb-label {
+    @apply text-[11px] font-black uppercase tracking-[0.14em];
+    color: color-mix(in srgb, var(--nb-text-soft) 88%, var(--nb-text));
+  }
+
+  .nb-input {
+    @apply w-full rounded-xl border px-4 py-3 text-sm transition;
+    color: var(--nb-text);
+    background-color: color-mix(in srgb, var(--nb-surface) 96%, transparent);
+    border-color: color-mix(in srgb, var(--nb-border) 78%, transparent);
+  }
+
+  .nb-input::placeholder {
+    color: color-mix(in srgb, var(--nb-text-soft) 72%, transparent);
+  }
+
+  .nb-input:focus {
+    border-color: color-mix(in srgb, var(--nb-accent) 64%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--nb-accent) 22%, transparent);
+  }
+
+  .nb-grid-cards {
+    @apply grid gap-4 sm:gap-5;
+  }
+
+  .nb-glow {
+    @apply pointer-events-none absolute rounded-full blur-3xl opacity-50;
+  }
+
+  .nb-divider {
+    border-top: 1px solid color-mix(in srgb, var(--nb-border) 74%, transparent);
+  }
+
+  .nb-mesh-bg {
+    background-image:
+      radial-gradient(circle at 20% 20%, color-mix(in srgb, var(--nb-accent) 14%, transparent) 0, transparent 38%),
+      radial-gradient(circle at 82% 0, color-mix(in srgb, var(--nb-primary) 16%, transparent) 0, transparent 42%),
+      linear-gradient(180deg, color-mix(in srgb, var(--nb-surface) 84%, transparent), color-mix(in srgb, var(--nb-bg-soft) 86%, transparent));
+  }
+
+  .nb-footer {
+    @apply border-t;
+    border-color: color-mix(in srgb, var(--nb-border) 72%, transparent);
+    background:
+      linear-gradient(180deg, #0f244a 0%, #081730 100%);
+    color: #d8e8ff;
+  }
+}
+
+@layer utilities {
+  .nb-fade-up {
+    animation: nb-fade-up 0.5s ease-out both;
+  }
+
+  .nb-tilt {
+    transform-style: preserve-3d;
+    transition: transform 0.28s ease;
+  }
+
+  .nb-tilt:hover {
+    transform: perspective(900px) rotateX(3deg) rotateY(-3deg) translateY(-2px);
+  }
+
+  .nb-aurora {
+    animation: nb-aurora 9s ease-in-out infinite alternate;
+    background-size: 170% 170%;
+  }
+
+  .nb-float {
+    animation: nb-float 6s ease-in-out infinite;
+  }
+
+  .nb-pulse-ring {
+    animation: nb-pulse-ring 2.8s ease-in-out infinite;
   }
 }
 
@@ -152,12 +327,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(30, 77, 162, 0.35);
+  background: color-mix(in srgb, var(--nb-primary) 35%, transparent);
   border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(30, 77, 162, 0.55);
+  background: color-mix(in srgb, var(--nb-primary) 55%, transparent);
 }
 
 @keyframes nb-fade-up {
@@ -171,6 +346,31 @@
   }
 }
 
-.nb-fade-up {
-  animation: nb-fade-up 0.5s ease-out both;
+@keyframes nb-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes nb-pulse-ring {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--nb-accent) 34%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 10px color-mix(in srgb, var(--nb-accent) 0%, transparent);
+  }
+}
+
+@keyframes nb-aurora {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
 }

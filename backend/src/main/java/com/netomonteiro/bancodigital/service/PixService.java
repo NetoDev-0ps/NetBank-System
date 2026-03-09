@@ -88,7 +88,7 @@ public class PixService {
 
         String cpfMascarado = "***." + cpf.substring(3, 6) + "." + cpf.substring(6, 9) + "-**";
 
-        return new PixPreviewResponseDTO(destino.getNome(), cpfMascarado, destino.getId());
+        return new PixPreviewResponseDTO(destino.getNome(), cpfMascarado, destino.getId(), chavePix.getTipo());
     }
 
     @Transactional

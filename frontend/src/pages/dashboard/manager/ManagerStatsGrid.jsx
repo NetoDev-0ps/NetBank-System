@@ -4,22 +4,20 @@ import T from "../../../shared/ui/Translate";
 import { statsCards } from "./managerDashboard.constants";
 
 const ManagerStatsGrid = ({ stats }) => (
-  <div className="grid grid-cols-2 gap-4 mb-8 md:grid-cols-4">
+  <section className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
     {statsCards.map((item) => (
-      <div
-        key={item.key}
-        className="p-5 bg-white border shadow-sm rounded-3xl border-slate-200 dark:bg-slate-900 dark:border-slate-800"
-      >
-        <div className={`mb-3 ${item.color}`}>{item.icon}</div>
-        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+      <article key={item.key} className="nb-panel">
+        <div className={`mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 ${item.color}`}>
+          {item.icon}
+        </div>
+
+        <p className="nb-eyebrow">
           <T>{item.label}</T>
         </p>
-        <p className="mt-1 text-3xl font-black text-slate-900 dark:text-white">
-          {stats[item.key] || 0}
-        </p>
-      </div>
+        <p className="mt-1 text-3xl font-extrabold text-slate-900 dark:text-white">{stats[item.key] || 0}</p>
+      </article>
     ))}
-  </div>
+  </section>
 );
 
 ManagerStatsGrid.propTypes = {
@@ -28,6 +26,7 @@ ManagerStatsGrid.propTypes = {
     pendentes: PropTypes.number,
     suspensas: PropTypes.number,
     bloqueadas: PropTypes.number,
+    encerradas: PropTypes.number,
   }).isRequired,
 };
 

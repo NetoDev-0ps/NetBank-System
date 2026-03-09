@@ -1,42 +1,38 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Settings, X } from "lucide-react";
-
-// Importa os botões que já temos
+import { AnimatePresence, motion } from "framer-motion";
+import { Settings2, X } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import LanguageToggle from "./LanguageToggle";
 
-const FloatingSettings = () => {
-  const [isOpen, setIsOpen] = useState(false);
+function FloatingSettings() {
+  const [open, setOpen] = useState(false);
 
   return (
-    // Posição fixa no canto da tela. O 'flex-col-reverse' faz os botões subirem.
-    <div className="fixed bottom-6 right-6 z-[9999] flex flex-col-reverse items-center gap-3 md:bottom-10 md:right-10">
-      {/* BOTÃO PRINCIPAL (ENGRENAGEM / FECHAR) */}
+    <div className="fixed bottom-5 right-4 z-[9999] flex flex-col-reverse items-center gap-3 sm:bottom-7 sm:right-7">
       <motion.button
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-center transition-colors border rounded-full shadow-2xl w-14 h-14 bg-white/90 dark:bg-slate-900/90 border-slate-200 dark:border-white/10 backdrop-blur-xl"
-        title="Configurações"
+        type="button"
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.92 }}
+        onClick={() => setOpen((prev) => !prev)}
+        className="nb-btn-ghost !w-12 !h-12 !rounded-full !p-0"
+        title="Preferencias"
       >
-        <motion.div
-          animate={{ rotate: isOpen ? 180 : 0 }}
-          transition={{ duration: 0.3 }}
-          className="text-blue-600 dark:text-blue-400"
+        <motion.span
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={{ duration: 0.25 }}
+          className="text-brand-primary dark:text-brand-accent"
         >
-          {isOpen ? <X size={24} /> : <Settings size={24} />}
-        </motion.div>
+          {open ? <X size={20} /> : <Settings2 size={20} />}
+        </motion.span>
       </motion.button>
 
-      {/* BOTÕES EXPANSÍVEIS (IDIOMA E TEMA) */}
       <AnimatePresence>
-        {isOpen && (
+        {open && (
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.8 }}
+            initial={{ opacity: 0, y: 12, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.8 }}
-            transition={{ duration: 0.2, staggerChildren: 0.1 }}
+            exit={{ opacity: 0, y: 12, scale: 0.96 }}
+            transition={{ duration: 0.18 }}
             className="flex flex-col gap-3"
           >
             <LanguageToggle />
@@ -46,6 +42,6 @@ const FloatingSettings = () => {
       </AnimatePresence>
     </div>
   );
-};
+}
 
 export default FloatingSettings;

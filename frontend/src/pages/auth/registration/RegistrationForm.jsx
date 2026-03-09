@@ -37,36 +37,43 @@ function RegistrationForm({
   onSubmit,
 }) {
   return (
-    <form onSubmit={onSubmit} noValidate className="space-y-1">
-      <motion.h3 variants={itemVariants} className="flex items-center gap-2 mb-6 text-xl font-bold text-slate-800 dark:text-white">
-        <UserPlus className="text-blue-600 dark:text-blue-400" /> <T>Dados Pessoais</T>
+    <form onSubmit={onSubmit} noValidate className="space-y-2">
+      <motion.h3
+        variants={itemVariants}
+        className="mb-4 flex items-center gap-2 text-lg font-extrabold text-slate-900 dark:text-white"
+      >
+        <UserPlus size={18} className="text-brand-primary dark:text-brand-accent" />
+        <T>Seus dados</T>
       </motion.h3>
 
-      <motion.div variants={itemVariants} className="grid grid-cols-1 gap-x-4 md:grid-cols-2">
+      <motion.div variants={itemVariants} className="grid gap-2 md:grid-cols-2 md:gap-x-4">
         <RegistrationInput
+          inputId="register-name"
           icon={User}
-          label="Nome Completo"
+          label="Nome completo"
           baseType="text"
           value={form.nome}
           onChange={(event) => onNameChange(event, "nome")}
-          placeholder="Apenas letras..."
+          placeholder="Digite seu nome completo"
           error={errors.nome}
           autoComplete="name"
         />
         <RegistrationInput
+          inputId="register-phone"
           icon={Phone}
           label="Telefone"
           baseType="text"
           value={form.telefone}
           onChange={onPhoneChange}
-          placeholder="(00) 0 0000-0000"
+          placeholder="(00) 00000-0000"
           error={errors.telefone}
           autoComplete="tel"
         />
       </motion.div>
 
-      <motion.div variants={itemVariants} className="grid grid-cols-1 gap-x-4 md:grid-cols-2">
+      <motion.div variants={itemVariants} className="grid gap-2 md:grid-cols-2 md:gap-x-4">
         <RegistrationInput
+          inputId="register-cpf"
           icon={CreditCard}
           label="CPF"
           baseType="text"
@@ -78,6 +85,7 @@ function RegistrationForm({
           autoComplete="off"
         />
         <RegistrationInput
+          inputId="register-birthday"
           icon={Calendar}
           label="Nascimento"
           baseType="date"
@@ -90,34 +98,37 @@ function RegistrationForm({
         />
       </motion.div>
 
-      <motion.div variants={itemVariants} className="grid grid-cols-1 gap-x-4 md:grid-cols-2">
+      <motion.div variants={itemVariants} className="grid gap-2 md:grid-cols-2 md:gap-x-4">
         <RegistrationInput
+          inputId="register-email"
           icon={Mail}
-          label="Email"
+          label="E-mail"
           baseType="email"
           value={form.email}
           onChange={(event) => onFieldChange("email", event.target.value)}
-          placeholder="email@gmail.com"
+          placeholder="email@provedor.com"
           error={errors.email}
           autoComplete="email"
         />
         <RegistrationInput
+          inputId="register-email-confirm"
           icon={Mail}
-          label="Confirmar Email"
+          label="Confirmar e-mail"
           baseType="email"
           value={form.confirmarEmail}
           onChange={(event) => onFieldChange("confirmarEmail", event.target.value)}
-          placeholder="Repita o email"
+          placeholder="Repita seu e-mail"
           error={errors.confirmarEmail}
           autoComplete="off"
         />
       </motion.div>
 
-      <motion.div variants={itemVariants} className="grid grid-cols-1 gap-x-4 md:grid-cols-2">
-        <div className="flex flex-col">
+      <motion.div variants={itemVariants} className="grid gap-2 md:grid-cols-2 md:gap-x-4">
+        <div>
           <RegistrationInput
+            inputId="register-password"
             icon={Lock}
-            label="Senha Segura"
+            label="Crie sua senha"
             baseType="password"
             value={form.senha}
             onChange={(event) => onFieldChange("senha", event.target.value)}
@@ -128,22 +139,28 @@ function RegistrationForm({
             autoComplete="new-password"
           />
 
-          <div className="h-1.5 mt-[-16px] mb-4 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+          <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
             <div
               className={`h-full transition-all duration-500 ${
-                passwordStrength < 50 ? "bg-red-500" : passwordStrength < 100 ? "bg-yellow-500" : "bg-green-500"
+                passwordStrength < 50
+                  ? "bg-rose-500"
+                  : passwordStrength < 100
+                    ? "bg-amber-500"
+                    : "bg-emerald-500"
               }`}
               style={{ width: `${passwordStrength}%` }}
             />
           </div>
-          <p className="text-[10px] text-slate-500 mt-[-10px] leading-tight">
-            <T>Min. 8 caracteres, 1 Maiuscula, 1 Numero e 1 Simbolo.</T>
+
+          <p className="mt-2 text-[10px] text-slate-500 dark:text-slate-400">
+            <T>Mínimo de 8 caracteres, com maiúscula, número e símbolo.</T>
           </p>
         </div>
 
         <RegistrationInput
+          inputId="register-password-confirm"
           icon={Lock}
-          label="Confirmar Senha"
+          label="Confirmar senha"
           baseType="password"
           value={form.confirmarSenha}
           onChange={(event) => onFieldChange("confirmarSenha", event.target.value)}
@@ -155,7 +172,7 @@ function RegistrationForm({
         />
       </motion.div>
 
-      <motion.div variants={itemVariants} className="mt-5">
+      <motion.div variants={itemVariants} className="mt-4">
         <HumanPuzzleCaptcha
           onVerified={onCaptchaVerified}
           refreshSignal={captchaRefresh}
@@ -163,19 +180,16 @@ function RegistrationForm({
         />
       </motion.div>
 
-      <motion.div
-        variants={itemVariants}
-        className="flex items-start gap-3 p-3 mt-6 border bg-blue-50/50 dark:bg-slate-950/50 rounded-xl border-blue-900/10 dark:border-blue-900/20"
-      >
+      <motion.div variants={itemVariants} className="nb-card-soft mt-5 flex gap-3 p-3">
         <input
           type="checkbox"
-          id="termos"
+          id="register-terms"
           checked={acceptedTerms}
           onChange={(event) => onAcceptedTermsChange(event.target.checked)}
-          className="w-4 h-4 mt-1 text-blue-600 bg-white border-blue-800 rounded cursor-pointer dark:bg-slate-900 focus:ring-blue-500"
+          className="mt-1 h-4 w-4 cursor-pointer rounded border-slate-300 text-brand-primary"
         />
-        <label htmlFor="termos" className="text-xs leading-relaxed cursor-pointer select-none text-blue-900/70 dark:text-blue-300/70">
-          <T>Li e concordo com a Politica de Privacidade e os Termos de Uso do NetBank.</T>
+        <label htmlFor="register-terms" className="cursor-pointer text-xs text-slate-600 dark:text-slate-300">
+          <T>Li e concordo com a política de privacidade e os termos de uso do NetBank.</T>
         </label>
       </motion.div>
 
@@ -185,19 +199,15 @@ function RegistrationForm({
         whileTap={acceptedTerms && captchaState.verified && captchaState.proofToken && !loading ? { scale: 0.98 } : {}}
         type="submit"
         disabled={!acceptedTerms || !captchaState.verified || !captchaState.proofToken || loading}
-        className={`w-full py-4 rounded-xl font-bold text-white transition-all shadow-lg mt-6 ${
-          acceptedTerms && captchaState.verified && captchaState.proofToken && !loading
-            ? "bg-blue-600 hover:bg-blue-500 shadow-blue-900/30"
-            : "bg-slate-400 dark:bg-slate-800 text-slate-500 cursor-not-allowed"
-        }`}
+        className="nb-button-primary mt-6 w-full disabled:cursor-not-allowed disabled:opacity-55"
       >
         {loading ? (
-          <div className="flex items-center justify-center gap-2">
-            <div className="w-5 h-5 border-2 rounded-full border-white/30 border-t-white animate-spin" />
+          <span className="inline-flex items-center gap-2">
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/35 border-t-white" />
             <T>Processando...</T>
-          </div>
+          </span>
         ) : (
-          <T>Solicitar Abertura de Conta</T>
+          <T>Solicitar abertura de conta</T>
         )}
       </motion.button>
     </form>

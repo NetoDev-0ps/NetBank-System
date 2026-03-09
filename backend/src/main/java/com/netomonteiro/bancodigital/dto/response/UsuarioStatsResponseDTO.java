@@ -6,5 +6,6 @@ public record UsuarioStatsResponseDTO(
     long pendentes,
     long suspensas,
     long bloqueadas,
+    long encerradas,
     long recusadas
 ) {}

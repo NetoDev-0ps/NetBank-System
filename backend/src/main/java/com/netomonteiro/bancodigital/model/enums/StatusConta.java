@@ -10,6 +10,7 @@ public enum StatusConta {
     ATIVA("Conta ativa"),
     SUSPENSA("Conta suspensa"),
     BLOQUEADA("Conta bloqueada"),
+    ENCERRADA("Conta encerrada"),
     RECUSADA("Cadastro recusado");
 
     private final String descricao;
@@ -30,8 +31,9 @@ public enum StatusConta {
         return switch (this) {
             case PENDENTE -> destino == ATIVA || destino == RECUSADA;
             case ATIVA -> destino == SUSPENSA || destino == BLOQUEADA;
-            case SUSPENSA -> destino == ATIVA || destino == BLOQUEADA;
-            case BLOQUEADA, RECUSADA -> false;
+            case SUSPENSA -> destino == ATIVA || destino == BLOQUEADA || destino == ENCERRADA;
+            case BLOQUEADA -> destino == ATIVA || destino == ENCERRADA;
+            case ENCERRADA, RECUSADA -> false;
         };
     }
 }

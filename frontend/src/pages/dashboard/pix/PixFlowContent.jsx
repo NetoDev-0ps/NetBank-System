@@ -18,13 +18,27 @@ import PixMenuButton from "./PixMenuButton";
 import PixPasswordDisplay from "./PixPasswordDisplay";
 import T from "../../../shared/ui/Translate";
 
+const pageTransition = {
+  initial: { opacity: 0, x: 16 },
+  animate: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: -16 },
+  transition: { duration: 0.24 },
+};
+
+const InlineError = ({ text }) =>
+  text ? (
+    <p className="rounded-xl border border-rose-300 bg-rose-100 px-3 py-2 text-xs font-bold text-rose-700 dark:border-rose-800 dark:bg-rose-900/25 dark:text-rose-300">
+      {text}
+    </p>
+  ) : null;
+
 export function PixLoadingState() {
   return (
-    <div className="flex items-center justify-center min-h-screen p-6 font-sans text-slate-900 dark:text-white bg-netlight-50 dark:bg-slate-950">
-      <div className="space-y-3 text-center">
-        <div className="w-12 h-12 mx-auto border-2 rounded-full border-slate-200 dark:border-slate-800 border-t-blue-500 animate-spin" />
-        <p className="text-xs font-black tracking-widest uppercase text-slate-400">
-          <T>Carregando Pix...</T>
+    <div className="nb-page flex items-center justify-center p-5">
+      <div className="nb-card w-full max-w-sm p-7 text-center">
+        <div className="mx-auto h-12 w-12 rounded-full border-4 border-brand-primary/25 border-t-brand-primary animate-spin" />
+        <p className="mt-4 text-xs font-black uppercase tracking-[0.16em] text-slate-500 dark:text-slate-300">
+          <T>Carregando área Pix...</T>
         </p>
       </div>
     </div>
@@ -33,25 +47,24 @@ export function PixLoadingState() {
 
 export function PixFatalState({ error, onBack, onRetry }) {
   return (
-    <div className="flex items-center justify-center min-h-screen p-6 font-sans text-slate-900 dark:text-white bg-netlight-50 dark:bg-slate-950">
-      <div className="w-full max-w-md space-y-6 text-center">
-        <div className="flex items-center justify-center w-20 h-20 mx-auto border bg-rose-600/10 rounded-3xl border-rose-500/20 text-rose-500">
-          <AlertCircle size={40} />
+    <div className="nb-page flex items-center justify-center p-5">
+      <div className="nb-card w-full max-w-md p-6 sm:p-7 text-center">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-500/15 text-rose-500">
+          <AlertCircle size={32} />
         </div>
-        <h2 className="text-2xl italic font-black"><T>Falha ao carregar</T></h2>
-        <p className="text-sm text-slate-400">{error || <T>Erro desconhecido.</T>}</p>
 
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            onClick={onBack}
-            className="py-4 text-xs font-black tracking-widest uppercase transition-all border border-slate-200 dark:border-slate-800 rounded-2xl hover:bg-white hover:text-black"
-          >
+        <h2 className="mt-4 text-2xl font-extrabold text-slate-900 dark:text-white">
+          <T>Não foi possível carregar o Pix</T>
+        </h2>
+        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+          {error || <T>Erro desconhecido.</T>}
+        </p>
+
+        <div className="mt-6 grid gap-3 sm:grid-cols-2">
+          <button type="button" onClick={onBack} className="nb-button-ghost w-full">
             <T>Voltar</T>
           </button>
-          <button
-            onClick={onRetry}
-            className="py-4 text-xs font-black tracking-widest uppercase transition-all bg-blue-600 text-white rounded-2xl hover:bg-blue-500"
-          >
+          <button type="button" onClick={onRetry} className="nb-button-primary w-full">
             <T>Tentar novamente</T>
           </button>
         </div>
@@ -105,23 +118,27 @@ export function PixFlowContent({
     <>
       <AnimatePresence mode="wait">
         {etapa === "SENHA_SETUP" && (
-          <motion.div
-            key="setup"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="space-y-8 text-center"
-          >
-            <div className="flex items-center justify-center w-20 h-20 mx-auto mb-2 text-blue-500 border bg-blue-600/10 rounded-3xl border-blue-500/20">
-              <ShieldCheck size={40} />
+          <motion.div key="SENHA_SETUP" {...pageTransition} className="space-y-6">
+            <div className="text-center">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-primary/10 text-brand-primary dark:bg-blue-300/20 dark:text-blue-100">
+                <ShieldCheck size={28} />
+              </div>
+              <h2 className="mt-4 text-2xl font-extrabold text-slate-900 dark:text-white">
+                {subEtapa === "DIGITAR" ? <T>Crie sua senha Pix</T> : <T>Confirme sua senha Pix</T>}
+              </h2>
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                <T>A senha deve ter 4 dígitos e será usada para confirmar transferências.</T>
+              </p>
             </div>
-            <h2 className="text-2xl italic font-black">
-              {subEtapa === "DIGITAR" ? <T>Crie sua Senha</T> : <T>Confirme a Senha</T>}
-            </h2>
+
             <PixPasswordDisplay value={subEtapa === "DIGITAR" ? senhaSetup : confirmacaoSenha} />
+
             <input
               ref={inputRef}
+              id="pix-password-setup"
+              name="pixPasswordSetup"
               type="tel"
+              inputMode="numeric"
               maxLength={4}
               autoFocus
               value={subEtapa === "DIGITAR" ? senhaSetup : confirmacaoSenha}
@@ -133,340 +150,382 @@ export function PixFlowContent({
                   setConfirmacaoSenha(value);
                 }
               }}
-              className="absolute opacity-0 pointer-events-none"
+              className="sr-only"
             />
-            <div className="pt-4">
-              {subEtapa === "DIGITAR" ? (
+
+            {subEtapa === "DIGITAR" ? (
+              <button
+                type="button"
+                disabled={senhaSetup.length < 4}
+                onClick={() => setSubEtapa("CONFIRMAR")}
+                className="nb-button-primary w-full disabled:cursor-not-allowed disabled:opacity-55"
+              >
+                <T>Próximo passo</T>
+              </button>
+            ) : (
+              <div className="space-y-3">
                 <button
-                  disabled={senhaSetup.length < 4}
-                  onClick={() => setSubEtapa("CONFIRMAR")}
-                  className="w-full py-5 text-xs font-black tracking-widest uppercase transition-all bg-blue-600 text-white rounded-2xl disabled:opacity-20"
+                  type="button"
+                  disabled={confirmacaoSenha.length < 4 || loading}
+                  onClick={() =>
+                    senhaSetup === confirmacaoSenha
+                      ? finalizarSetupSenha()
+                      : setErro("As senhas não conferem.")
+                  }
+                  className="nb-button-primary w-full disabled:cursor-not-allowed disabled:opacity-55"
                 >
-                  <T>Proximo Passo</T>
+                  {loading ? <T>Salvando...</T> : <T>Confirmar senha</T>}
                 </button>
-              ) : (
-                <div className="space-y-4">
-                  <button
-                    disabled={confirmacaoSenha.length < 4 || loading}
-                    onClick={() => (senhaSetup === confirmacaoSenha ? finalizarSetupSenha() : setErro("Senhas nao batem"))}
-                    className="w-full py-5 text-xs font-black tracking-widest uppercase bg-emerald-600 text-white rounded-2xl"
-                  >
-                    {loading ? <T>Salvando...</T> : <T>Confirmar Senha</T>}
-                  </button>
-                  <button
-                    onClick={resetSetup}
-                    className="flex items-center gap-2 mx-auto text-[10px] font-bold text-slate-500 uppercase"
-                  >
-                    <RotateCcw size={14} /> <T>Recomecar</T>
-                  </button>
-                </div>
-              )}
-            </div>
-            {erro && <p className="text-rose-500 text-[10px] font-bold uppercase">{erro}</p>}
+                <button type="button" onClick={resetSetup} className="nb-button-ghost w-full">
+                  <RotateCcw size={14} />
+                  <T>Recomeçar</T>
+                </button>
+              </div>
+            )}
+
+            <InlineError text={erro} />
           </motion.div>
         )}
 
         {etapa === "CHAVE_SETUP" && (
-          <motion.div
-            key="chave"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="space-y-6 text-center"
-          >
-            <div className="flex items-center justify-center w-20 h-20 mx-auto mb-2 border text-emerald-500 bg-emerald-600/10 rounded-3xl border-emerald-500/20">
-              <Fingerprint size={40} />
-            </div>
-            <div>
-              <h2 className="text-2xl italic font-black"><T>Quase la!</T></h2>
-              <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-2">
-                <T>Escolha qual dado ativar como sua Chave Pix</T>
+          <motion.div key="CHAVE_SETUP" {...pageTransition} className="space-y-6">
+            <div className="text-center">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300">
+                <Fingerprint size={28} />
+              </div>
+              <h2 className="mt-4 text-2xl font-extrabold text-slate-900 dark:text-white">
+                <T>Ative sua primeira chave Pix</T>
+              </h2>
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                <T>Escolha um dado seu para começar a receber transferências.</T>
               </p>
             </div>
-            <div className="pt-6 space-y-4 text-left">
+
+            <div className="grid gap-3">
               <button
+                type="button"
                 onClick={() => handleAtivarChave("CPF", usuario.cpf)}
-                className="flex items-center justify-between w-full p-6 transition-all border-2 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-3xl hover:border-emerald-500 group"
+                className="nb-card-soft group flex items-center justify-between p-4 text-left"
               >
                 <div>
-                  <p className="text-[10px] font-black uppercase text-slate-500 mb-1 group-hover:text-emerald-500">
-                    <T>Meu CPF</T>
-                  </p>
-                  <p className="font-mono text-lg text-slate-700 dark:text-slate-200">
+                  <p className="nb-eyebrow"><T>CPF</T></p>
+                  <p className="mt-1 text-sm font-bold text-slate-900 dark:text-white">
                     {formatarPeloTipo(usuario.cpf, "CPF")}
                   </p>
                 </div>
-                <CheckCircle2 size={24} className="text-slate-700 group-hover:text-emerald-500" />
+                <CheckCircle2 size={20} className="text-slate-400 transition-colors group-hover:text-emerald-500" />
               </button>
+
               <button
+                type="button"
                 onClick={() => handleAtivarChave("EMAIL", usuario.email)}
-                className="flex items-center justify-between w-full p-6 transition-all border-2 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-3xl hover:border-emerald-500 group"
+                className="nb-card-soft group flex items-center justify-between p-4 text-left"
               >
                 <div>
-                  <p className="text-[10px] font-black uppercase text-slate-500 mb-1 group-hover:text-emerald-500">
-                    <T>Meu E-mail</T>
-                  </p>
-                  <p className="font-mono text-sm text-slate-700 dark:text-slate-200">{usuario.email}</p>
+                  <p className="nb-eyebrow"><T>E-mail</T></p>
+                  <p className="mt-1 text-sm font-bold text-slate-900 dark:text-white break-all">{usuario.email}</p>
                 </div>
-                <CheckCircle2 size={24} className="text-slate-700 group-hover:text-emerald-500" />
+                <CheckCircle2 size={20} className="text-slate-400 transition-colors group-hover:text-emerald-500" />
               </button>
             </div>
-            {erro && <p className="text-rose-500 text-[10px] font-bold uppercase pt-4">{erro}</p>}
+
+            <InlineError text={erro} />
           </motion.div>
         )}
 
         {etapa === "HUB" && (
-          <motion.div
-            key="hub"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="grid grid-cols-2 gap-4"
-          >
-            <PixMenuButton
-              icon={<Send size={24} />}
-              label="Transferir"
-              onClick={() => {
-                setChaveDestino("");
-                setEtapa("TRANSFERIR_CHAVE");
-              }}
-            />
-            <PixMenuButton icon={<QrCode size={24} />} label="QR Code" />
-            <PixMenuButton icon={<Smartphone size={24} />} label="Cobrar" />
-            <PixMenuButton icon={<Key size={24} />} label="Chaves" onClick={carregarMinhasChaves} />
+          <motion.div key="HUB" {...pageTransition} className="space-y-5">
+            <div>
+              <p className="nb-eyebrow"><T>Área Pix</T></p>
+              <h2 className="mt-1 text-2xl font-extrabold text-slate-900 dark:text-white">
+                <T>O que você deseja fazer agora?</T>
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              <PixMenuButton
+                icon={<Send size={20} />}
+                label="Transferir"
+                onClick={() => {
+                  setChaveDestino("");
+                  setErro("");
+                  setEtapa("TRANSFERIR_CHAVE");
+                }}
+              />
+              <PixMenuButton
+                icon={<QrCode size={20} />}
+                label="QR Code"
+                onClick={() => setErro("Função em desenvolvimento.")}
+              />
+              <PixMenuButton
+                icon={<Smartphone size={20} />}
+                label="Cobrar"
+                onClick={() => setErro("Função em desenvolvimento.")}
+              />
+              <PixMenuButton icon={<Key size={20} />} label="Chaves" onClick={carregarMinhasChaves} />
+            </div>
+
+            <InlineError text={erro} />
           </motion.div>
         )}
 
         {etapa === "GERENCIAR_CHAVES" && (
-          <motion.div
-            key="chaves"
-            initial={{ x: 30, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            className="space-y-6"
-          >
-            <h2 className="text-2xl italic font-black"><T>Minhas Chaves</T></h2>
+          <motion.div key="GERENCIAR_CHAVES" {...pageTransition} className="space-y-5">
+            <div>
+              <p className="nb-eyebrow"><T>Gestão</T></p>
+              <h2 className="mt-1 text-2xl font-extrabold text-slate-900 dark:text-white">
+                <T>Minhas chaves Pix</T>
+              </h2>
+            </div>
 
             <div className="space-y-3">
-              {minhasChaves.length === 0 && (
-                <p className="text-sm italic text-slate-500">
+              {minhasChaves.length === 0 ? (
+                <p className="text-sm italic text-slate-500 dark:text-slate-400">
                   <T>Nenhuma chave cadastrada.</T>
                 </p>
+              ) : (
+                minhasChaves.map((chave) => (
+                  <article key={chave.id} className="nb-card-soft flex items-center justify-between p-4">
+                    <div>
+                      <p className="nb-eyebrow">{chave.tipo}</p>
+                      <p className="mt-1 font-mono text-sm font-bold text-slate-900 dark:text-white">
+                        {formatarPeloTipo(chave.valor, chave.tipo)}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => abrirModalExclusao(chave.id)}
+                      className="nb-button-ghost !p-2.5"
+                      title="Excluir chave"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </article>
+                ))
               )}
-              {minhasChaves.map((chave) => (
-                <div
-                  key={chave.id}
-                  className="flex items-center justify-between p-4 border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-2xl"
-                >
-                  <div>
-                    <p className="text-[9px] font-black uppercase text-blue-500 mb-1">{chave.tipo}</p>
-                    <p className="font-mono text-sm text-slate-700 dark:text-slate-200">
-                      {formatarPeloTipo(chave.valor, chave.tipo)}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => abrirModalExclusao(chave.id)}
-                    className="p-2 transition-colors text-slate-500 hover:text-rose-500 bg-slate-800/50 rounded-xl"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-              ))}
             </div>
 
             {minhasChaves.length < 3 && (
-              <div className="pt-6 border-t border-slate-200 dark:border-slate-800">
-                <p className="text-[10px] font-bold text-slate-500 uppercase mb-4 text-center">
-                  <T>Cadastrar nova chave</T>
-                </p>
-                <div className="grid grid-cols-2 gap-3">
+              <div className="nb-card-soft p-4 sm:p-5">
+                <p className="nb-eyebrow"><T>Adicionar nova chave</T></p>
+                <div className="mt-3 grid grid-cols-2 gap-2">
                   {!tiposCadastrados.includes("CPF") && (
                     <button
+                      type="button"
                       onClick={() => handleAtivarChave("CPF", usuario.cpf)}
-                      className="py-4 bg-white dark:bg-slate-900 border border-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest hover:border-blue-500 transition-all col-span-2"
+                      className="nb-button-secondary"
                     >
                       <T>CPF</T>
                     </button>
                   )}
                   {!tiposCadastrados.includes("TELEFONE") && (
                     <button
+                      type="button"
                       onClick={() => handleAtivarChave("TELEFONE", usuario.telefone)}
-                      className="py-4 bg-white dark:bg-slate-900 border border-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest hover:border-blue-500 transition-all"
+                      className="nb-button-secondary"
                     >
-                      <T>Celular</T>
+                      <T>Telefone</T>
                     </button>
                   )}
                   {!tiposCadastrados.includes("EMAIL") && (
                     <button
+                      type="button"
                       onClick={() => handleAtivarChave("EMAIL", usuario.email)}
-                      className="py-4 bg-white dark:bg-slate-900 border border-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest hover:border-blue-500 transition-all"
+                      className="nb-button-secondary"
                     >
                       <T>E-mail</T>
                     </button>
                   )}
                 </div>
-                {erro && (
-                  <p className="text-rose-500 text-[10px] font-bold uppercase mt-4 text-center">{erro}</p>
-                )}
               </div>
             )}
+
+            <InlineError text={erro} />
           </motion.div>
         )}
 
         {etapa === "TRANSFERIR_CHAVE" && (
-          <motion.div
-            key="key"
-            initial={{ x: 30, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            className="space-y-6"
-          >
-            <h2 className="text-2xl italic font-black"><T>Para qual Chave?</T></h2>
+          <motion.div key="TRANSFERIR_CHAVE" {...pageTransition} className="space-y-5">
+            <div>
+              <p className="nb-eyebrow"><T>Transferência</T></p>
+              <h2 className="mt-1 text-2xl font-extrabold text-slate-900 dark:text-white">
+                <T>Digite a chave do destinatário</T>
+              </h2>
+            </div>
 
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
               <input
+                id="pix-destination-key"
+                name="pixDestinationKey"
                 type="text"
-                placeholder="Insira a chave..."
+                placeholder="CPF, telefone ou e-mail"
                 value={chaveDestino}
                 onChange={(event) => setChaveDestino(mascaraInputDinamica(event.target.value))}
-                className="flex-1 p-5 font-mono text-lg transition-all border-2 outline-none bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-2xl focus:border-blue-600"
+                className="nb-input flex-1"
               />
               <button
+                type="button"
                 onClick={() => buscarDestinatario()}
                 disabled={loading}
-                className="flex items-center justify-center px-6 bg-blue-600 text-white rounded-2xl hover:bg-blue-500"
+                className="nb-button-primary !px-4"
               >
-                <Send size={20} />
+                <Send size={16} />
               </button>
             </div>
-            {erro && <p className="text-xs font-bold text-rose-500">{erro}</p>}
+
+            <InlineError text={erro} />
 
             {favoritos.length > 0 && (
-              <div className="pt-4">
-                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">
-                  <T>Favoritos</T>
-                </h3>
-                <div className="flex gap-3 pb-2 overflow-x-auto scrollbar-hide">
+              <section>
+                <p className="nb-eyebrow"><T>Favoritos</T></p>
+                <div className="mt-3 flex gap-3 overflow-x-auto pb-2">
                   {favoritos.map((fav) => (
                     <button
+                      type="button"
                       key={fav.chave}
                       onClick={() => buscarDestinatario(fav.chave)}
-                      className="flex flex-col items-center flex-shrink-0 w-20 gap-2"
+                      className="nb-card-soft min-w-[5.25rem] p-3 text-center"
                     >
-                      <div className="relative flex items-center justify-center text-blue-400 border rounded-full w-14 h-14 bg-slate-800 border-slate-700">
-                        <User size={24} />
-                        <div className="absolute p-1 rounded-full -bottom-1 -right-1 bg-white dark:bg-slate-900">
-                          <Star size={10} fill="#f59e0b" className="text-yellow-500" />
-                        </div>
+                      <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-brand-primary/10 text-brand-primary">
+                        <User size={16} />
                       </div>
-                      <span className="text-[9px] font-bold text-slate-600 dark:text-slate-300 text-center truncate w-full">
-                        {fav.nome.split(" ")[0]}
-                      </span>
+                      <p className="mt-2 text-[11px] font-bold text-slate-700 dark:text-slate-200 truncate">
+                        {fav.nome?.split(" ")?.[0] || "Contato"}
+                      </p>
                     </button>
                   ))}
                 </div>
-              </div>
+              </section>
             )}
 
-            <div className="pt-2">
-              <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">
-                <T>Recentes</T>
-              </h3>
+            <section>
+              <p className="nb-eyebrow"><T>Recentes</T></p>
               {recentes.length === 0 ? (
-                <p className="text-xs italic text-slate-600">
-                  <T>Nenhum envio recente.</T>
+                <p className="mt-2 text-sm italic text-slate-500 dark:text-slate-400">
+                  <T>Nenhuma transferência recente.</T>
                 </p>
               ) : (
-                <div className="space-y-2">
+                <div className="mt-3 space-y-2">
                   {recentes.map((rec) => {
                     const isFav = favoritos.some((fav) => fav.chave === rec.chave);
                     return (
-                      <div
-                        key={`${rec.chave}-${rec.nome}`}
-                        className="flex items-center justify-between p-4 transition-colors border bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800"
-                      >
+                      <article key={`${rec.chave}-${rec.nome}`} className="nb-card-soft flex items-center justify-between p-3">
                         <button
+                          type="button"
                           onClick={() => buscarDestinatario(rec.chave)}
-                          className="flex items-center flex-1 gap-4 text-left"
+                          className="flex flex-1 items-center gap-3 text-left"
                         >
-                          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-slate-800 text-slate-400">
-                            <User size={18} />
+                          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-primary/10 text-brand-primary">
+                            <User size={15} />
                           </div>
                           <div>
-                            <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{rec.nome}</p>
-                            <p className="text-[10px] font-mono text-slate-500">{rec.cpfMascarado}</p>
+                            <p className="text-sm font-bold text-slate-900 dark:text-white">{rec.nome}</p>
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                              {rec.cpfMascarado || formatarPeloTipo(rec.chave, rec.chaveTipo)}
+                            </p>
                           </div>
                         </button>
-                        <button onClick={() => toggleFavorito(rec)} className="p-3">
+                        <button type="button" onClick={() => toggleFavorito(rec)} className="nb-button-ghost !p-2">
                           <Star
-                            size={20}
-                            className={isFav ? "text-yellow-500" : "text-slate-600"}
+                            size={16}
+                            className={isFav ? "text-amber-500" : "text-slate-400"}
                             fill={isFav ? "#f59e0b" : "none"}
                           />
                         </button>
-                      </div>
+                      </article>
                     );
                   })}
                 </div>
               )}
-            </div>
+            </section>
           </motion.div>
         )}
 
         {etapa === "TRANSFERIR_VALOR" && (
-          <motion.div
-            key="val"
-            initial={{ x: 30, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            className="space-y-8 text-center"
-          >
-            <div className="p-6 border bg-blue-600/5 border-blue-500/20 rounded-3xl">
-              <p className="text-[9px] font-black text-blue-500 uppercase tracking-widest mb-2">
-                <T>Para:</T>
-              </p>
-              <h3 className="text-xl font-black">{dadosDestino.nome}</h3>
-              <p className="font-mono text-xs text-slate-500">{dadosDestino.cpfMascarado}</p>
+          <motion.div key="TRANSFERIR_VALOR" {...pageTransition} className="space-y-6 text-center">
+            <div className="nb-card-soft p-5">
+              <p className="nb-eyebrow"><T>Destinatário</T></p>
+              <h3 className="mt-1 text-xl font-extrabold text-slate-900 dark:text-white">{dadosDestino.nome}</h3>
+              <p className="mt-1 text-xs font-mono text-slate-500 dark:text-slate-400">{dadosDestino.cpfMascarado}</p>
             </div>
-            <input
-              type="number"
-              placeholder="R$ 0,00"
-              autoFocus
-              onChange={(event) => setValorTransferencia(event.target.value)}
-              className="w-full text-5xl font-black text-center text-slate-900 dark:text-white bg-transparent outline-none placeholder-slate-900"
-            />
+
+            <div>
+              <label htmlFor="pix-transfer-amount" className="nb-eyebrow"><T>Valor</T></label>
+              <input
+                id="pix-transfer-amount"
+                name="pixTransferAmount"
+                type="number"
+                inputMode="decimal"
+                min="0.01"
+                step="0.01"
+                placeholder="0,00"
+                autoFocus
+                value={valorTransferencia}
+                onChange={(event) => setValorTransferencia(event.target.value)}
+                className="mt-2 w-full bg-transparent text-center text-5xl font-extrabold text-slate-900 outline-none placeholder:text-slate-300 dark:text-white"
+              />
+            </div>
+
+            <InlineError text={erro} />
+
             <button
+              type="button"
               onClick={() => {
                 setErro("");
+
+                const valor = Number.parseFloat(String(valorTransferencia).replace(",", "."));
+                if (!Number.isFinite(valor) || valor <= 0) {
+                  setErro("Informe um valor maior que zero.");
+                  return;
+                }
+
+                if (Number(dadosDestino?.idDestino) === Number(usuario?.id)) {
+                  setErro("Não é permitido transferir para sua própria conta.");
+                  return;
+                }
+
                 if (!idempotencyKey) {
                   setIdempotencyKey(generateTransferIdempotencyKey());
                 }
                 setEtapa("TRANSFERIR_SENHA");
               }}
-              className="w-full py-5 text-xs font-black tracking-widest uppercase bg-blue-600 rounded-2xl"
+              className="nb-button-primary w-full"
             >
-              <T>Revisar Pagamento</T>
+              <T>Revisar e continuar</T>
             </button>
           </motion.div>
         )}
 
         {etapa === "TRANSFERIR_SENHA" && (
-          <motion.div
-            key="pass-val"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="space-y-8 text-center"
-          >
-            <h2 className="text-2xl italic font-black"><T>Senha de 4 digitos</T></h2>
+          <motion.div key="TRANSFERIR_SENHA" {...pageTransition} className="space-y-6 text-center">
+            <div>
+              <p className="nb-eyebrow"><T>Confirmação</T></p>
+              <h2 className="mt-1 text-2xl font-extrabold text-slate-900 dark:text-white">
+                <T>Digite a senha Pix</T>
+              </h2>
+            </div>
+
             <PixPasswordDisplay value={senhaValidacao} />
+
             <input
               ref={inputRef}
+              id="pix-password-confirm"
+              name="pixPasswordConfirm"
               type="tel"
+              inputMode="numeric"
               maxLength={4}
               value={senhaValidacao}
               onChange={(event) => setSenhaValidacao(event.target.value.replace(/\D/g, ""))}
-              className="absolute opacity-0 pointer-events-none"
+              className="sr-only"
             />
-            {erro && <p className="text-xs font-bold text-rose-500">{erro}</p>}
+
+            <InlineError text={erro} />
+
             <button
+              type="button"
               onClick={realizarTransferencia}
               disabled={senhaValidacao.length < 4 || loading}
-              className="w-full py-5 text-xs font-black tracking-widest uppercase bg-emerald-600 text-white rounded-2xl"
+              className="nb-button-primary w-full disabled:cursor-not-allowed disabled:opacity-55"
             >
               {loading ? <T>Processando...</T> : <T>Confirmar Pix</T>}
             </button>
@@ -474,23 +533,34 @@ export function PixFlowContent({
         )}
 
         {etapa === "SUCESSO" && (
-          <motion.div
-            key="success"
-            initial={{ scale: 0.9 }}
-            animate={{ scale: 1 }}
-            className="space-y-6 text-center"
-          >
-            <CheckCircle2 size={100} className="mx-auto text-emerald-500" />
-            <h2 className="text-3xl italic font-black"><T>Pix Enviado!</T></h2>
-            <div className="p-6 space-y-2 text-xs text-left border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-3xl">
-              <p>VALOR: R$ {Number.parseFloat(valorTransferencia || "0").toFixed(2)}</p>
-              <p>PARA: {dadosDestino.nome}</p>
-              <p className="text-[10px] text-slate-500 break-all">ID: {comprovante?.idTransacao}</p>
+          <motion.div key="SUCESSO" {...pageTransition} className="space-y-6 text-center">
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300">
+              <CheckCircle2 size={42} />
             </div>
-            <button
-              onClick={onFinish}
-              className="w-full py-4 text-xs font-black uppercase transition-all border border-slate-200 dark:border-slate-800 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800"
-            >
+
+            <div>
+              <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white"><T>Pix enviado com sucesso!</T></h2>
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                <T>Transferência concluída com sucesso.</T>
+              </p>
+            </div>
+
+            <div className="nb-card-soft p-4 text-left">
+              <p className="text-sm text-slate-600 dark:text-slate-300">
+                <strong className="text-slate-900 dark:text-white"><T>Valor:</T></strong>{" "}
+                {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(
+                  Number.parseFloat(valorTransferencia || "0") || 0,
+                )}
+              </p>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                <strong className="text-slate-900 dark:text-white"><T>Para:</T></strong> {dadosDestino.nome}
+              </p>
+              <p className="mt-1 break-all text-xs text-slate-500 dark:text-slate-400">
+                <strong className="text-slate-700 dark:text-slate-300"><T>ID:</T></strong> {comprovante?.idTransacao}
+              </p>
+            </div>
+
+            <button type="button" onClick={onFinish} className="nb-button-primary w-full">
               <T>Concluir</T>
             </button>
           </motion.div>
@@ -503,33 +573,41 @@ export function PixFlowContent({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm"
           >
             <motion.div
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.9 }}
-              className="w-full max-w-sm p-6 text-center border shadow-2xl bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-3xl"
+              initial={{ opacity: 0, y: 12, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 12, scale: 0.98 }}
+              className="nb-card w-full max-w-sm p-6"
             >
-              <AlertCircle size={48} className="mx-auto mb-4 text-rose-500" />
-              <h3 className="mb-2 text-xl italic font-bold"><T>Excluir Chave?</T></h3>
-              <p className="mb-6 text-sm text-slate-400">
-                <T>Esta acao nao pode ser desfeita e voce nao recebera mais transferencias por esta chave.</T>
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-500/15 text-rose-500">
+                <AlertCircle size={28} />
+              </div>
+
+              <h3 className="mt-4 text-center text-xl font-extrabold text-slate-900 dark:text-white">
+                <T>Excluir chave Pix?</T>
+              </h3>
+              <p className="mt-2 text-center text-sm text-slate-500 dark:text-slate-400">
+                <T>Esta ação remove a chave de forma definitiva.</T>
               </p>
-              <div className="flex gap-3">
+
+              <div className="mt-6 grid grid-cols-2 gap-3">
                 <button
+                  type="button"
                   onClick={() => setChaveParaExcluir(null)}
                   disabled={loading}
-                  className="flex-1 py-3 font-bold text-white transition-colors bg-slate-800 rounded-xl hover:bg-slate-700"
+                  className="nb-button-ghost w-full"
                 >
                   <T>Cancelar</T>
                 </button>
                 <button
+                  type="button"
                   onClick={confirmarExclusao}
                   disabled={loading}
-                  className="flex-1 py-3 font-bold text-white transition-colors bg-rose-600 rounded-xl hover:bg-rose-500"
+                  className="nb-button-danger w-full disabled:cursor-not-allowed disabled:opacity-55"
                 >
-                  {loading ? <T>A Excluir...</T> : <T>Sim, Excluir</T>}
+                  {loading ? <T>Excluindo...</T> : <T>Excluir</T>}
                 </button>
               </div>
             </motion.div>

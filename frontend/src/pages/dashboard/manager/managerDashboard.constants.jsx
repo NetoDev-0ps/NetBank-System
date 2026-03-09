@@ -1,11 +1,12 @@
 import React from "react";
-import { Ban, Check, Clock, ShieldAlert, UserCheck, X } from "lucide-react";
+import { Ban, Check, Clock, ShieldAlert, UserCheck, X, XCircle } from "lucide-react";
 
 export const statusBadgeClass = {
   ATIVA: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
   PENDENTE: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
   SUSPENSA: "bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300",
   BLOQUEADA: "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-300",
+  ENCERRADA: "bg-slate-300 text-slate-700 dark:bg-slate-700 dark:text-slate-200",
   RECUSADA: "bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200",
 };
 
@@ -34,6 +35,12 @@ export const statsCards = [
     icon: <ShieldAlert />,
     color: "text-red-700 dark:text-red-400",
   },
+  {
+    key: "encerradas",
+    label: "Encerradas",
+    icon: <XCircle />,
+    color: "text-slate-700 dark:text-slate-300",
+  },
 ];
 
 export const mapManagerApiError = (error, fallback) => {
@@ -41,13 +48,13 @@ export const mapManagerApiError = (error, fallback) => {
 
   switch (code) {
     case "NAO_AUTENTICADO":
-      return "Sua sessao expirou. Faca login novamente.";
+      return "Sua sessão expirou. Faça login novamente.";
     case "ACESSO_NEGADO":
-      return "Voce nao tem permissao para essa acao.";
+      return "Você não tem permissão para esta ação.";
     case "CONFLITO_DE_DADOS":
-      return "Nao foi possivel concluir por conflito de dados.";
+      return "Não foi possível concluir por conflito de dados.";
     case "TRANSICAO_STATUS_INVALIDA":
-      return "Transicao de status nao permitida para este cliente.";
+      return "Transição de status não permitida para este cliente.";
     default:
       return code || fallback;
   }
@@ -71,9 +78,16 @@ export const buildStatusActions = (status) => {
         { label: "Bloquear", targetStatus: "BLOQUEADA", variant: "danger", icon: <ShieldAlert size={16} /> },
       ];
     case "BLOQUEADA":
+      return [
+        { label: "Reativar", targetStatus: "ATIVA", variant: "approve", icon: <Check size={16} /> },
+        { label: "Encerrar", targetStatus: "ENCERRADA", variant: "danger", icon: <XCircle size={16} /> },
+      ];
+    case "ENCERRADA":
     case "RECUSADA":
       return [];
     default:
       return [];
   }
 };
+
+export const canDeleteUser = (status) => status === "ENCERRADA" || status === "RECUSADA";

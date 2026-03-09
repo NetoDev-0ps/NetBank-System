@@ -6,37 +6,42 @@ import { ensureCsrfToken } from "../../core/auth/csrf";
 import { useAuth } from "../../core/contexts/AuthContext";
 import HumanPuzzleCaptcha from "../../shared/ui/HumanPuzzleCaptcha";
 import T from "../../shared/ui/Translate";
-import WindSense from "../../shared/effects/WindFlowCanvas";
 
 const mapManagerError = (error) => {
   const code = error.response?.data?.erro;
 
   switch (code) {
     case "CREDENCIAIS_GERENTE_INVALIDAS":
-      return "Email ou senha de gerente invalidos.";
+      return "E-mail ou senha de gerente inválidos.";
     case "GERENTE_INATIVO":
-      return "Este gerente esta inativo.";
+      return "Este gerente está inativo.";
     case "TIPO_ACESSO_INVALIDO":
-      return "Tipo de acesso invalido.";
+      return "Tipo de acesso inválido.";
     case "LOGIN_BLOQUEADO_TEMPORARIAMENTE":
       return "Muitas tentativas. Aguarde alguns minutos e tente novamente.";
     case "CAPTCHA_PROOF_AUSENTE":
     case "CAPTCHA_PROOF_INVALIDO":
     case "CAPTCHA_PROOF_REUTILIZADO":
     case "CAPTCHA_PROOF_IP_INVALIDO":
-      return "Refaca a verificacao humana para continuar.";
+      return "Refaça a verificação humana para continuar.";
     default:
       return (
         error.response?.data?.erro ||
         error.response?.data?.message ||
-        "Nao foi possivel autenticar como gerente."
+        "Não foi possível autenticar como gerente."
       );
   }
 };
 
 function ManagerLogin() {
   const navigate = useNavigate();
-  const { loginManager, isManagerAuthenticated, isCustomerAuthenticated } = useAuth();
+  const {
+    loginManager,
+    logout,
+    customerUser,
+    isManagerAuthenticated,
+    isCustomerAuthenticated,
+  } = useAuth();
 
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
@@ -47,27 +52,22 @@ function ManagerLogin() {
 
   useEffect(() => {
     ensureCsrfToken().catch(() => {
-      // token sera renovado automaticamente na proxima chamada
+      // token será renovado automaticamente na próxima chamada
     });
   }, []);
 
   useEffect(() => {
     if (isManagerAuthenticated) {
       navigate("/painel", { replace: true });
-      return;
     }
-
-    if (isCustomerAuthenticated) {
-      navigate("/dashboard", { replace: true });
-    }
-  }, [isManagerAuthenticated, isCustomerAuthenticated, navigate]);
+  }, [isManagerAuthenticated, navigate]);
 
   const handleLogin = async (event) => {
     event.preventDefault();
     setError("");
 
     if (!captchaState.verified || !captchaState.proofToken) {
-      setError("Conclua a verificacao humana para continuar.");
+      setError("Conclua a verificação humana para continuar.");
       return;
     }
 
@@ -107,115 +107,156 @@ function ManagerLogin() {
     }
   };
 
+  if (isCustomerAuthenticated) {
+    return (
+      <div className="nb-page flex items-center justify-center p-4 sm:p-6">
+        <div className="nb-shell max-w-xl">
+          <div className="nb-panel">
+            <p className="nb-eyebrow"><T>Sessão ativa detectada</T></p>
+            <h1 className="mt-3 text-2xl font-extrabold text-slate-900 dark:text-white">
+              <T>Você já está logado como cliente</T>
+            </h1>
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+              {customerUser?.email || "cliente@netbank.com.br"}
+            </p>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+              <T>Para entrar como gerente, finalize a sessão atual e continue.</T>
+            </p>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <button
+                type="button"
+                className="nb-button-ghost w-full"
+                onClick={() => navigate("/dashboard", { replace: true })}
+              >
+                <T>Ir para dashboard cliente</T>
+              </button>
+              <button
+                type="button"
+                className="nb-button-primary w-full"
+                onClick={() => logout("/login-gerente")}
+              >
+                <T>Trocar para gerente</T>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="nb-page flex items-center justify-center p-4 sm:p-6">
-      <div className="fixed inset-0 pointer-events-none opacity-30">
-        <WindSense />
-      </div>
-
-      <div className="nb-shell max-w-5xl">
-        <div className="grid overflow-hidden nb-card lg:grid-cols-[1fr,1.2fr]">
-          <aside className="hidden lg:flex flex-col justify-between p-8 bg-gradient-to-br from-brand-primary to-brand-secondary text-white">
-            <div>
+      <div className="nb-shell max-w-6xl">
+        <div className="nb-glass overflow-hidden">
+          <div className="grid lg:grid-cols-[0.95fr,1.05fr]">
+            <aside className="p-7 sm:p-8 lg:p-10 bg-gradient-to-br from-brand-primary to-brand-secondary text-white">
               <Link to="/home" className="inline-flex items-center gap-1 text-xs font-bold text-blue-100 hover:text-white">
                 <ChevronLeft size={15} />
-                <T>Inicio</T>
+                <T>Início</T>
               </Link>
-            </div>
 
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.2em] font-black text-blue-100/80">
+              <p className="mt-10 text-[10px] font-black uppercase tracking-[0.2em] text-blue-100/85">
                 <T>Acesso corporativo</T>
               </p>
-              <h2 className="mt-3 text-3xl font-black leading-tight">
-                <T>Painel de Gerencia NetBank</T>
+              <h2 className="mt-3 text-[clamp(1.8rem,5vw,3rem)] font-extrabold leading-tight text-white">
+                <T>Painel de gerenciamento NetBank</T>
               </h2>
               <p className="mt-4 text-sm text-blue-100/90">
-                <T>Controle de clientes, status e operacoes com seguranca e rastreabilidade.</T>
+                <T>Ambiente para análise de clientes, aprovações, bloqueios e operações com rastreabilidade.</T>
               </p>
-            </div>
 
-            <div className="nb-card-soft !bg-white/10 !border-white/20 p-4 text-xs">
-              <div className="flex items-center gap-2 font-black tracking-widest uppercase">
-                <ShieldCheck size={14} />
-                <T>Seguranca ativa</T>
-              </div>
-              <p className="mt-2 text-blue-100">
-                <T>Sessao protegida por cookie HttpOnly e validacao no backend.</T>
-              </p>
-            </div>
-          </aside>
-
-          <section className="p-5 sm:p-8">
-            <div className="mb-6 lg:hidden">
-              <Link to="/home" className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 dark:text-slate-300">
-                <ChevronLeft size={15} />
-                <T>Inicio</T>
-              </Link>
-            </div>
-
-            <header className="mb-6">
-              <img src="/brand-logo-primary.png" alt="NetBank" className="h-10 mb-5" />
-              <h1 className="text-2xl font-black text-slate-900 dark:text-white">
-                <T>Area do Gerente</T>
-              </h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                <T>Entre com suas credenciais administrativas.</T>
-              </p>
-            </header>
-
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <label className="nb-label">
-                  <T>E-mail</T>
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  placeholder="admin@netbank.com.br"
-                  className="nb-input mt-2"
-                  autoComplete="username"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="nb-label">
-                  <T>Senha</T>
-                </label>
-                <input
-                  type="password"
-                  value={senha}
-                  onChange={(event) => setSenha(event.target.value)}
-                  placeholder="********"
-                  className="nb-input mt-2"
-                  autoComplete="current-password"
-                  required
-                />
-              </div>
-
-              <HumanPuzzleCaptcha
-                onVerified={setCaptchaState}
-                refreshSignal={captchaRefresh}
-                disabled={loading}
-              />
-
-              <button
-                type="submit"
-                disabled={loading || !captchaState.verified || !captchaState.proofToken}
-                className="nb-button-primary w-full"
-              >
-                {loading ? <T>Entrando...</T> : <T>Entrar como gerente</T>}
-              </button>
-
-              {error && (
-                <div className="p-3 text-xs font-bold text-center text-rose-700 bg-rose-100 border border-rose-200 rounded-xl dark:text-rose-300 dark:bg-rose-900/20 dark:border-rose-900/40">
-                  <T>{error}</T>
+              <div className="mt-8 rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur">
+                <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-blue-100">
+                  <ShieldCheck size={14} />
+                  <T>Segurança ativa</T>
                 </div>
-              )}
-            </form>
-          </section>
+                <p className="mt-2 text-sm text-blue-100/90">
+                  <T>Sessão protegida por cookie HttpOnly, CSRF e validação de perfil no backend.</T>
+                </p>
+              </div>
+
+              <img
+                src="https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=1400&q=80"
+                alt="Mesa com análise financeira"
+                className="mt-8 h-52 w-full rounded-2xl object-cover border border-white/20"
+              />
+            </aside>
+
+            <section className="p-6 sm:p-8 lg:p-10">
+              <header className="mb-6">
+                <img src="/brand-logo-primary.png" alt="NetBank" className="h-10 mb-5" />
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
+                  <T>Área do gerente</T>
+                </h1>
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                  <T>Use suas credenciais administrativas para continuar.</T>
+                </p>
+              </header>
+
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div>
+                  <label htmlFor="manager-email" className="nb-label">
+                    <T>E-mail</T>
+                  </label>
+                  <input
+                    id="manager-email"
+                    name="managerEmail"
+                    type="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder="admin@netbank.com.br"
+                    className="nb-input mt-2"
+                    autoComplete="username"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="manager-password" className="nb-label">
+                    <T>Senha</T>
+                  </label>
+                  <input
+                    id="manager-password"
+                    name="managerPassword"
+                    type="password"
+                    value={senha}
+                    onChange={(event) => setSenha(event.target.value)}
+                    placeholder="********"
+                    className="nb-input mt-2"
+                    autoComplete="current-password"
+                    required
+                  />
+                </div>
+
+                <HumanPuzzleCaptcha
+                  onVerified={setCaptchaState}
+                  refreshSignal={captchaRefresh}
+                  disabled={loading}
+                />
+
+                <button
+                  type="submit"
+                  disabled={loading || !captchaState.verified || !captchaState.proofToken}
+                  className="nb-button-primary w-full disabled:cursor-not-allowed disabled:opacity-55"
+                >
+                  {loading ? <T>Entrando...</T> : <T>Entrar como gerente</T>}
+                </button>
+
+                {error && (
+                  <div className="rounded-xl border border-rose-300 bg-rose-100 px-3 py-2 text-xs font-bold text-rose-700 dark:border-rose-800 dark:bg-rose-900/30 dark:text-rose-300">
+                    <T>{error}</T>
+                  </div>
+                )}
+
+                <div className="pt-1 text-xs text-slate-500 dark:text-slate-400">
+                  <Link to="/login-cliente" className="font-bold text-brand-primary hover:text-brand-secondary dark:text-brand-accent">
+                    <T>Acesso de cliente</T>
+                  </Link>
+                </div>
+              </form>
+            </section>
+          </div>
         </div>
       </div>
     </div>
@@ -223,4 +264,3 @@ function ManagerLogin() {
 }
 
 export default ManagerLogin;
-

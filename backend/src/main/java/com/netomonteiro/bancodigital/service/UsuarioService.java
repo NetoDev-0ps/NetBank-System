@@ -33,6 +33,7 @@ public class UsuarioService {
     private final UsuarioNormalizationService normalizationService;
     private final UsuarioMapper usuarioMapper;
     private final UsuarioStatusPolicy statusPolicy;
+    private final BrazilPhoneValidator brazilPhoneValidator;
 
     public List<Usuario> listarTodos() {
         return usuarioRepository.findAll();
@@ -58,10 +59,11 @@ public class UsuarioService {
         long pendentes = usuarioRepository.countByStatus(StatusConta.PENDENTE);
         long suspensas = usuarioRepository.countByStatus(StatusConta.SUSPENSA);
         long bloqueadas = usuarioRepository.countByStatus(StatusConta.BLOQUEADA);
+        long encerradas = usuarioRepository.countByStatus(StatusConta.ENCERRADA);
         long recusadas = usuarioRepository.countByStatus(StatusConta.RECUSADA);
         long total = incluirRecusadas
-            ? ativos + pendentes + suspensas + bloqueadas + recusadas
-            : ativos + pendentes + suspensas + bloqueadas;
+            ? ativos + pendentes + suspensas + bloqueadas + encerradas + recusadas
+            : ativos + pendentes + suspensas + bloqueadas + encerradas;
 
         return new UsuarioPageResponseDTO(
             usuariosPage.getContent().stream().map(this::toDto).toList(),
@@ -69,7 +71,15 @@ public class UsuarioService {
             usuariosPage.getSize(),
             usuariosPage.getTotalElements(),
             usuariosPage.getTotalPages(),
-            new UsuarioStatsResponseDTO(total, ativos, pendentes, suspensas, bloqueadas, recusadas)
+            new UsuarioStatsResponseDTO(
+                total,
+                ativos,
+                pendentes,
+                suspensas,
+                bloqueadas,
+                encerradas,
+                recusadas
+            )
         );
     }
 
@@ -90,6 +100,10 @@ public class UsuarioService {
         usuario.setCpf(normalizationService.normalizarCpf(usuario.getCpf()));
         usuario.setTelefone(normalizationService.normalizarTelefone(usuario.getTelefone()));
         usuario.setEmail(normalizationService.normalizarEmail(usuario.getEmail()));
+
+        if (!brazilPhoneValidator.hasValidDdd(usuario.getTelefone())) {
+            throw new IllegalArgumentException("TELEFONE_DDD_INVALIDO");
+        }
 
         if (usuarioRepository.existsByCpf(usuario.getCpf())) {
             throw new IllegalArgumentException("CPF_JA_CADASTRADO");

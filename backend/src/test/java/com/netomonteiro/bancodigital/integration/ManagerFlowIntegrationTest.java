@@ -202,7 +202,7 @@ class ManagerFlowIntegrationTest {
             usuarioRepository.findById(clienteId).orElseThrow().getStatus()
         );
 
-        HttpResponse<String> tentativaReativarBloqueada = send(
+        HttpResponse<String> reativarBloqueada = send(
             client,
             "PATCH",
             baseUrl + "/usuarios/" + clienteId + "/status",
@@ -210,10 +210,37 @@ class ManagerFlowIntegrationTest {
             csrfContext.csrfToken(),
             "{\"status\":\"ATIVA\"}"
         );
-        assertEquals(400, tentativaReativarBloqueada.statusCode());
-        assertTrue(tentativaReativarBloqueada.body().contains("TRANSICAO_STATUS_INVALIDA"));
+        assertEquals(200, reativarBloqueada.statusCode());
+        assertEquals(
+            StatusConta.ATIVA,
+            usuarioRepository.findById(clienteId).orElseThrow().getStatus()
+        );
+
+        HttpResponse<String> bloquearNovamente = send(
+            client,
+            "PATCH",
+            baseUrl + "/usuarios/" + clienteId + "/status",
+            cookies,
+            csrfContext.csrfToken(),
+            "{\"status\":\"BLOQUEADA\"}"
+        );
+        assertEquals(200, bloquearNovamente.statusCode());
         assertEquals(
             StatusConta.BLOQUEADA,
+            usuarioRepository.findById(clienteId).orElseThrow().getStatus()
+        );
+
+        HttpResponse<String> encerrar = send(
+            client,
+            "PATCH",
+            baseUrl + "/usuarios/" + clienteId + "/status",
+            cookies,
+            csrfContext.csrfToken(),
+            "{\"status\":\"ENCERRADA\"}"
+        );
+        assertEquals(200, encerrar.statusCode());
+        assertEquals(
+            StatusConta.ENCERRADA,
             usuarioRepository.findById(clienteId).orElseThrow().getStatus()
         );
 
@@ -231,7 +258,8 @@ class ManagerFlowIntegrationTest {
 
         List<AuditLog> logs = auditLogRepository.findTop200ByOrderByCreatedAtDesc();
         assertTrue(logs.stream().anyMatch(log -> "LOGIN_GERENTE".equals(log.getAction())));
-        assertTrue(logs.stream().anyMatch(log -> "ALTERAR_STATUS_USUARIO".equals(log.getAction())));
+        assertTrue(logs.stream().anyMatch(log -> "BLOQUEAR_USUARIO".equals(log.getAction())));
+        assertTrue(logs.stream().anyMatch(log -> "ENCERRAR_CONTA_USUARIO".equals(log.getAction())));
         assertTrue(logs.stream().anyMatch(log -> "EXCLUIR_USUARIO".equals(log.getAction())));
     }
 
@@ -306,6 +334,8 @@ class ManagerFlowIntegrationTest {
 
     private record CsrfContext(String csrfToken, String csrfCookie) {}
 }
+
+
 
 
 

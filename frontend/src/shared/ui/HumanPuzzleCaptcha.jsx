@@ -11,11 +11,11 @@ const buildCaptchaErrorMessage = (errorCode) => {
     case "CAPTCHA_CHALLENGE_REUTILIZADO":
       return "Desafio expirado. Solicite um novo desafio.";
     case "CAPTCHA_CHALLENGE_INVALIDO":
-      return "Desafio invalido. Gere um novo desafio.";
+      return "Desafio inválido. Gere um novo desafio.";
     case "CAPTCHA_PROOF_INVALIDO":
-      return "Falha de validacao humana. Tente novamente.";
+      return "Falha de validação humana. Tente novamente.";
     default:
-      return "Nao foi possivel validar o desafio humano.";
+      return "Não foi possível validar o desafio humano.";
   }
 };
 
@@ -60,7 +60,7 @@ function HumanPuzzleCaptcha({ onVerified, disabled, refreshSignal }) {
       setSliderValue(min);
     } catch {
       setChallenge(null);
-      setError("Nao foi possivel iniciar a verificacao humana.");
+      setError("Não foi possível iniciar a verificação humana.");
     } finally {
       setLoadingChallenge(false);
     }
@@ -80,7 +80,7 @@ function HumanPuzzleCaptcha({ onVerified, disabled, refreshSignal }) {
 
   const validate = async () => {
     if (!challenge?.challengeToken) {
-      setError("Desafio nao carregado. Atualize para continuar.");
+      setError("Desafio não carregado. Atualize para continuar.");
       return;
     }
 
@@ -133,12 +133,12 @@ function HumanPuzzleCaptcha({ onVerified, disabled, refreshSignal }) {
       <div className="flex items-center gap-2 mb-3">
         <ShieldCheck size={18} className="text-brand-primary dark:text-brand-accent" />
         <p className="text-xs font-black tracking-widest uppercase text-slate-600 dark:text-slate-300">
-          <T>Verificacao humana</T>
+          <T>Verificação humana</T>
         </p>
       </div>
 
       <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
-        <T>Arraste a peca para alinhar no marcador e confirme que voce e humano.</T>
+        <T>Arraste a peça para alinhar no marcador e confirme que você é humano.</T>
       </p>
 
       <div className="relative h-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-gradient-to-r from-netlight-50 to-blue-100/70 dark:from-slate-900 dark:to-blue-950/70 overflow-hidden">
@@ -156,6 +156,8 @@ function HumanPuzzleCaptcha({ onVerified, disabled, refreshSignal }) {
       </div>
 
       <input
+        id="human-puzzle-slider"
+        name="humanPuzzleSlider"
         type="range"
         min={challenge?.min ?? 0}
         max={challenge?.max ?? 100}
@@ -228,3 +230,5 @@ HumanPuzzleCaptcha.defaultProps = {
 };
 
 export default HumanPuzzleCaptcha;
+
+

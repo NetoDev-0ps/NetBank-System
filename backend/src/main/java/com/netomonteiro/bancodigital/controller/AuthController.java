@@ -145,22 +145,16 @@ public class AuthController {
 
     @GetMapping("/csrf")
     public ResponseEntity<Object> csrf(CsrfToken csrfToken) {
-        ResponseCookie csrfCookie = ResponseCookie.from("XSRF-TOKEN", csrfToken.getToken())
-            .httpOnly(false)
-            .secure(authCookieProperties.isSecure())
-            .sameSite(authCookieProperties.getSameSite())
-            .path(authCookieProperties.getPath())
-            .build();
-
-        return ResponseEntity.ok()
-            .header(HttpHeaders.SET_COOKIE, csrfCookie.toString())
-            .body(
-                Map.of(
-                    "token", csrfToken.getToken(),
-                    "headerName", csrfToken.getHeaderName(),
-                    "parameterName", csrfToken.getParameterName()
-                )
-            );
+        return ResponseEntity.ok(
+            Map.of(
+                "token",
+                csrfToken.getToken(),
+                "headerName",
+                csrfToken.getHeaderName(),
+                "parameterName",
+                csrfToken.getParameterName()
+            )
+        );
     }
 
     @GetMapping("/me")
@@ -252,3 +246,4 @@ public class AuthController {
             .build();
     }
 }
+

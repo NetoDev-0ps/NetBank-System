@@ -1,9 +1,8 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { CheckCircle, ChevronLeft } from "lucide-react";
+import { CheckCircle2, ChevronLeft } from "lucide-react";
 import api from "../../core/api/apiClient";
-import WindSense from "../../shared/effects/WindFlowCanvas";
 import Notification from "../../shared/ui/Notification";
 import T from "../../shared/ui/Translate";
 import RegistrationForm from "./registration/RegistrationForm";
@@ -22,17 +21,17 @@ const containerVariants = {
     opacity: 1,
     scale: 1,
     transition: {
-      duration: 0.5,
+      duration: 0.48,
       ease: [0.16, 1, 0.3, 1],
-      staggerChildren: 0.05,
+      staggerChildren: 0.06,
     },
   },
-  exit: { opacity: 0, y: -20, transition: { duration: 0.3 } },
+  exit: { opacity: 0, y: -16, transition: { duration: 0.28 } },
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 15 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+  hidden: { opacity: 0, y: 14 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.38 } },
 };
 
 function RegistrationPage() {
@@ -62,7 +61,6 @@ function RegistrationPage() {
   });
 
   const [errors, setErrors] = useState({});
-
   const passwordStrength = useMemo(() => calculatePasswordStrength(form.senha), [form.senha]);
 
   const handleChange = (field, value) => {
@@ -104,7 +102,7 @@ function RegistrationPage() {
     if (!validateForm()) return;
 
     if (!captchaState.verified || !captchaState.proofToken) {
-      setGlobalError("Conclua a verificacao humana para continuar.");
+      setGlobalError("Conclua a verificação humana para continuar.");
       return;
     }
 
@@ -131,23 +129,26 @@ function RegistrationPage() {
       const backendError = error.response?.data?.erro || error.response?.data;
 
       if (backendError === "CPF_JA_CADASTRADO") {
-        setErrors((prev) => ({ ...prev, cpf: "Este CPF ja esta cadastrado." }));
-        setGlobalError("Ja existe uma conta com este CPF.");
+        setErrors((prev) => ({ ...prev, cpf: "Este CPF já está cadastrado." }));
+        setGlobalError("Já existe uma conta com este CPF.");
       } else if (backendError === "EMAIL_JA_CADASTRADO") {
-        setErrors((prev) => ({ ...prev, email: "Este e-mail ja esta em uso." }));
-        setGlobalError("Ja existe uma conta com este e-mail.");
+        setErrors((prev) => ({ ...prev, email: "Este e-mail já está em uso." }));
+        setGlobalError("Já existe uma conta com este e-mail.");
       } else if (backendError === "TELEFONE_JA_CADASTRADO") {
-        setErrors((prev) => ({ ...prev, telefone: "Este telefone ja esta em uso." }));
-        setGlobalError("Ja existe uma conta com este telefone.");
+        setErrors((prev) => ({ ...prev, telefone: "Este telefone já está em uso." }));
+        setGlobalError("Já existe uma conta com este telefone.");
+      } else if (backendError === "TELEFONE_DDD_INVALIDO") {
+        setErrors((prev) => ({ ...prev, telefone: "DDD inválido. Use um DDD brasileiro válido." }));
+        setGlobalError("Telefone com DDD inválido para cadastro no Brasil.");
       } else if (
         backendError === "CAPTCHA_PROOF_AUSENTE" ||
         backendError === "CAPTCHA_PROOF_INVALIDO" ||
         backendError === "CAPTCHA_PROOF_REUTILIZADO" ||
         backendError === "CAPTCHA_PROOF_IP_INVALIDO"
       ) {
-        setGlobalError("Refaca a verificacao humana para concluir o cadastro.");
+        setGlobalError("Refaça a verificação humana para concluir o cadastro.");
       } else {
-        setGlobalError("Erro no servidor. Tente novamente.");
+        setGlobalError("Não foi possível concluir o cadastro agora. Tente novamente.");
       }
 
       setCaptchaRefresh((value) => value + 1);
@@ -157,11 +158,7 @@ function RegistrationPage() {
   };
 
   return (
-    <div className="relative flex items-center justify-center min-h-screen p-4 overflow-x-hidden font-sans transition-colors duration-500 bg-[#BFCEF5] dark:bg-slate-950">
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <WindSense />
-      </div>
-
+    <div className="nb-page flex items-center justify-center p-4 sm:p-6">
       <AnimatePresence>
         {globalError && (
           <Notification
@@ -178,25 +175,26 @@ function RegistrationPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4"
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.92, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="w-full max-w-sm p-8 text-center border shadow-2xl bg-slate-900 border-green-500/30 rounded-3xl"
+              className="nb-card w-full max-w-sm p-7 text-center"
             >
-              <CheckCircle className="mx-auto mb-6 text-green-400" size={60} />
-              <h2 className="mb-2 text-2xl font-bold text-white">
-                <T>Conta Criada!</T>
+              <CheckCircle2 className="mx-auto mb-5 text-emerald-500" size={62} />
+              <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">
+                <T>Conta criada com sucesso</T>
               </h2>
-              <p className="mb-8 text-sm text-slate-400">
-                <T>Cadastro enviado para analise profissional.</T>
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-300">
+                <T>Seu cadastro foi enviado para análise. Assim que aprovado, você poderá acessar sua conta.</T>
               </p>
               <button
+                type="button"
                 onClick={() => navigate("/home")}
-                className="w-full py-3 font-bold text-white transition bg-green-600 shadow-lg hover:bg-green-500 rounded-xl shadow-green-900/20"
+                className="nb-button-primary mt-6 w-full"
               >
-                <T>Voltar ao Inicio</T>
+                <T>Voltar para o início</T>
               </button>
             </motion.div>
           </motion.div>
@@ -208,73 +206,78 @@ function RegistrationPage() {
         initial="hidden"
         animate="visible"
         exit="exit"
-        className="relative z-10 flex flex-col w-full max-w-5xl overflow-hidden border shadow-2xl bg-white/60 dark:bg-slate-900/80 backdrop-blur-xl border-blue-900/10 dark:border-white/10 rounded-3xl md:flex-row"
+        className="nb-glass w-full max-w-6xl overflow-hidden"
       >
-        <div className="relative flex flex-col justify-between p-8 overflow-hidden text-white bg-blue-900 dark:bg-blue-900/40 md:w-2/5">
-          <motion.div variants={itemVariants} className="relative z-10 flex flex-col h-full">
-            <div className="relative z-30">
-              <Link to="/home" className="flex items-center gap-1 mb-8 text-blue-100 transition hover:text-white w-max">
-                <ChevronLeft size={16} /> <T>Inicio</T>
+        <div className="grid lg:grid-cols-[0.95fr,1.05fr]">
+          <aside className="nb-mesh-bg p-7 sm:p-8 lg:p-10 text-slate-900 dark:text-white">
+            <motion.div variants={itemVariants}>
+              <Link to="/home" className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-brand-primary dark:text-slate-300 dark:hover:text-brand-accent">
+                <ChevronLeft size={15} />
+                <T>Início</T>
               </Link>
-              <h2 className="mb-2 text-4xl font-extrabold tracking-tight">
-                <T>Seja NetBank</T>
-              </h2>
-              <p className="text-sm text-blue-100/80">
-                <T>O banco que fala a sua lingua.</T>
+            </motion.div>
+
+            <motion.div variants={itemVariants} className="mt-8">
+              <p className="nb-eyebrow"><T>Cadastro NetBank</T></p>
+              <h1 className="mt-3 text-[clamp(1.8rem,5vw,3rem)] font-extrabold leading-tight text-slate-900 dark:text-white">
+                <T>Abra sua conta em poucos minutos</T>
+              </h1>
+              <p className="nb-copy mt-4 max-w-md">
+                <T>Preencha seus dados com calma. Nosso fluxo valida cada campo para reduzir erros e trazer segurança desde o primeiro acesso.</T>
               </p>
-            </div>
+            </motion.div>
 
-            <div className="relative flex items-center justify-center flex-1 my-8">
-              <motion.img
-                initial={{ x: -200, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ type: "spring", stiffness: 60, damping: 15, delay: 0.3 }}
-                src="/credit-cards-showcase.png"
-                alt="Cartoes NetBank"
-                className="w-full max-w-full h-auto drop-shadow-[0_20px_30px_rgba(0,0,0,0.5)] object-contain z-20 scale-[1.6]"
-              />
-            </div>
+            <motion.div variants={itemVariants} className="mt-8 space-y-3">
+              <article className="nb-card-soft p-3">
+                <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                  <T>Validação de CPF, e-mail, telefone e idade mínima.</T>
+                </p>
+              </article>
+              <article className="nb-card-soft p-3">
+                <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                  <T>Desafio humano para proteger o cadastro contra automação.</T>
+                </p>
+              </article>
+              <article className="nb-card-soft p-3">
+                <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                  <T>Fluxo preparado para celular e desktop.</T>
+                </p>
+              </article>
+            </motion.div>
 
-            <div className="relative z-30 mt-auto">
-              <h3 className="mb-2 text-2xl font-bold leading-tight text-white drop-shadow-md">
-                <T>Os melhores limites do mercado.</T>
-              </h3>
-              <p className="text-sm leading-relaxed text-blue-100/90 drop-shadow-md">
-                <T>
-                  Abra sua conta agora e desbloqueie um cartao premium com zero anuidade e beneficios exclusivos para o seu estilo de vida.
-                </T>
-              </p>
-            </div>
-          </motion.div>
+            <motion.img
+              variants={itemVariants}
+              src="https://images.unsplash.com/photo-1601597111158-2fceff292cdc?auto=format&fit=crop&w=1400&q=80"
+              alt="Cliente utilizando aplicativo bancário"
+              className="mt-8 h-52 w-full rounded-2xl object-cover border border-slate-200/70 dark:border-slate-700/70"
+            />
+          </aside>
 
-          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-400/30 rounded-full blur-[100px] -mr-20 -mt-20 pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan-400/20 rounded-full blur-[100px] -ml-20 -mb-20 pointer-events-none" />
-        </div>
-
-        <div className="p-8 md:w-3/5 max-h-[90vh] overflow-y-auto custom-scrollbar">
-          <RegistrationForm
-            form={form}
-            errors={errors}
-            minDate={minDate}
-            maxDate={maxDate}
-            passwordStrength={passwordStrength}
-            showPassword={showPassword}
-            showConfirmPassword={showConfirmPassword}
-            acceptedTerms={acceptedTerms}
-            captchaState={captchaState}
-            captchaRefresh={captchaRefresh}
-            loading={loading}
-            itemVariants={itemVariants}
-            onNameChange={handleLettersChange}
-            onPhoneChange={handlePhoneChange}
-            onCpfChange={handleCpfChange}
-            onFieldChange={handleChange}
-            onToggleShowPassword={() => setShowPassword((value) => !value)}
-            onToggleShowConfirmPassword={() => setShowConfirmPassword((value) => !value)}
-            onCaptchaVerified={setCaptchaState}
-            onAcceptedTermsChange={setAcceptedTerms}
-            onSubmit={handleSubmit}
-          />
+          <section className="p-6 sm:p-8 lg:p-10">
+            <RegistrationForm
+              form={form}
+              errors={errors}
+              minDate={minDate}
+              maxDate={maxDate}
+              passwordStrength={passwordStrength}
+              showPassword={showPassword}
+              showConfirmPassword={showConfirmPassword}
+              acceptedTerms={acceptedTerms}
+              captchaState={captchaState}
+              captchaRefresh={captchaRefresh}
+              loading={loading}
+              itemVariants={itemVariants}
+              onNameChange={handleLettersChange}
+              onPhoneChange={handlePhoneChange}
+              onCpfChange={handleCpfChange}
+              onFieldChange={handleChange}
+              onToggleShowPassword={() => setShowPassword((value) => !value)}
+              onToggleShowConfirmPassword={() => setShowConfirmPassword((value) => !value)}
+              onCaptchaVerified={setCaptchaState}
+              onAcceptedTermsChange={setAcceptedTerms}
+              onSubmit={handleSubmit}
+            />
+          </section>
         </div>
       </motion.div>
     </div>

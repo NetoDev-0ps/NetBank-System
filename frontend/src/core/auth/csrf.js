@@ -1,4 +1,14 @@
-import api from "../api/apiClient";
+import axios from "axios";
+
+const baseURL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+
+const csrfClient = axios.create({
+  baseURL,
+  withCredentials: true,
+  withXSRFToken: true,
+  xsrfCookieName: "XSRF-TOKEN",
+  xsrfHeaderName: "X-XSRF-TOKEN",
+});
 
 let csrfPromise = null;
 
@@ -8,7 +18,7 @@ export async function ensureCsrfToken({ forceRefresh = false } = {}) {
   }
 
   if (!csrfPromise) {
-    csrfPromise = api
+    csrfPromise = csrfClient
       .get("/auth/csrf", {
         meta: { skipAuthHandling: true },
       })

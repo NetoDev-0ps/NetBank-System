@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useState } from "react";
 import { LogOut, RotateCcw, Search } from "lucide-react";
 import api from "../../core/api/apiClient";
 import { useAuth } from "../../core/contexts/AuthContext";
-import WindSense from "../../shared/effects/WindFlowCanvas";
 import ConfirmationModal from "../../shared/modals/ConfirmationModal";
 import Notification from "../../shared/ui/Notification";
 import T from "../../shared/ui/Translate";
@@ -18,6 +17,7 @@ const EMPTY_STATS = {
   pendentes: 0,
   suspensas: 0,
   bloqueadas: 0,
+  encerradas: 0,
   recusadas: 0,
 };
 
@@ -53,7 +53,7 @@ function ManagerDashboardPage() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setBuscaDebounced(busca.trim());
-    }, 300);
+    }, 320);
 
     return () => clearTimeout(timer);
   }, [busca]);
@@ -82,7 +82,7 @@ function ManagerDashboardPage() {
       } catch (error) {
         const mensagem = mapManagerApiError(
           error,
-          "Falha ao sincronizar usuarios com o servidor.",
+          "Falha ao sincronizar usuários com o servidor.",
         );
         setLoadError(mensagem);
         setNotificacao({ msg: mensagem, type: "error" });
@@ -98,17 +98,27 @@ function ManagerDashboardPage() {
   }, [carregarUsuarios]);
 
   const alterarStatus = async (id, novoStatus) => {
+    if (novoStatus === "ENCERRADA") {
+      const confirmado = window.confirm(
+        "Encerrar esta conta remove o acesso do cliente e mantém apenas a opção de exclusão definitiva. Deseja continuar?",
+      );
+
+      if (!confirmado) {
+        return;
+      }
+    }
+
     try {
       setStatusEmAtualizacao(id);
       await api.patch(`/usuarios/${id}/status`, { status: novoStatus });
       setNotificacao({
-        msg: `Status atualizado para ${novoStatus}.`,
+        msg: `Status alterado para ${novoStatus}.`,
         type: "success",
       });
       await carregarUsuarios(page);
     } catch (error) {
       setNotificacao({
-        msg: mapManagerApiError(error, "Nao foi possivel atualizar o status."),
+        msg: mapManagerApiError(error, "Não foi possível atualizar o status."),
         type: "error",
       });
     } finally {
@@ -130,12 +140,12 @@ function ManagerDashboardPage() {
     try {
       setDeletando(true);
       await api.delete(`/usuarios/${id}`);
-      setNotificacao({ msg: "Cliente excluido com sucesso.", type: "success" });
+      setNotificacao({ msg: "Cliente excluído com sucesso.", type: "success" });
       setModalExclusao({ open: false, id: null, nome: "" });
       await carregarUsuarios(Math.max(0, page));
     } catch (error) {
       setNotificacao({
-        msg: mapManagerApiError(error, "Nao foi possivel excluir o cliente."),
+        msg: mapManagerApiError(error, "Não foi possível excluir o cliente."),
         type: "error",
       });
     } finally {
@@ -155,18 +165,19 @@ function ManagerDashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#CFF3F8] dark:bg-slate-950">
-        <div className="w-10 h-10 border-4 border-blue-600 rounded-full border-t-transparent animate-spin" />
+      <div className="nb-page flex items-center justify-center">
+        <div className="nb-card p-6 sm:p-8 flex flex-col items-center gap-3">
+          <div className="h-10 w-10 rounded-full border-4 border-blue-500 border-t-transparent animate-spin" />
+          <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500 dark:text-slate-300">
+            <T>Carregando painel</T>
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen font-sans transition-colors bg-[#CFF3F8] dark:bg-slate-950 text-slate-800 dark:text-slate-200">
-      <div className="fixed inset-0 z-0 pointer-events-none opacity-30">
-        <WindSense />
-      </div>
-
+    <div className="nb-page text-slate-800 dark:text-slate-200">
       <div className="fixed top-20 left-0 right-0 z-[100] flex justify-center pointer-events-none">
         <div className="pointer-events-auto">
           <Notification
@@ -177,14 +188,12 @@ function ManagerDashboardPage() {
         </div>
       </div>
 
-      <header className="relative z-[90] bg-white border-b shadow-sm dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between px-4 sm:px-6 py-5 mx-auto max-w-7xl">
+      <header className="nb-topbar">
+        <div className="nb-shell py-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
-              <T>Painel Administrativo</T>
-            </p>
-            <h1 className="text-2xl font-black text-slate-900 dark:text-white">
-              NetBank - Gerencia
+            <p className="nb-eyebrow"><T>Painel administrativo</T></p>
+            <h1 className="mt-1 text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
+              NetBank Gestão
             </h1>
             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
               {adminInfo.nome} - {adminInfo.email}
@@ -193,16 +202,18 @@ function ManagerDashboardPage() {
 
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <button
+              type="button"
               onClick={() => carregarUsuarios(page)}
-              className="flex items-center gap-2 px-4 py-3 text-xs font-black tracking-widest uppercase transition border rounded-2xl bg-white/80 border-slate-200 text-slate-700 hover:bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200"
+              className="nb-button-ghost"
             >
               <RotateCcw size={16} />
               <T>Atualizar</T>
             </button>
 
             <button
+              type="button"
               onClick={() => logout("/home")}
-              className="flex items-center gap-2 px-4 py-3 text-xs font-black tracking-widest text-white uppercase transition bg-rose-600 rounded-2xl hover:bg-rose-500"
+              className="nb-button-danger"
             >
               <LogOut size={16} />
               <T>Sair</T>
@@ -211,19 +222,18 @@ function ManagerDashboardPage() {
         </div>
       </header>
 
-      <main className="relative z-10 px-4 sm:px-6 py-6 sm:py-8 mx-auto max-w-7xl">
+      <main className="nb-shell py-6 sm:py-8">
         {loadError && (
-          <div className="p-4 mb-6 border rounded-2xl bg-white/80 border-rose-500/30 text-rose-700 dark:bg-rose-500/10 dark:border-rose-500/20 dark:text-rose-200">
+          <div className="mb-6 rounded-2xl border border-rose-300 bg-rose-100 p-4 text-rose-700 dark:border-rose-800 dark:bg-rose-900/25 dark:text-rose-300">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-rose-600 dark:text-rose-300">
-                  <T>Falha de sincronizacao</T>
-                </p>
+                <p className="nb-eyebrow !text-rose-600 dark:!text-rose-300"><T>Falha de sincronização</T></p>
                 <p className="mt-1 text-sm">{loadError}</p>
               </div>
               <button
+                type="button"
                 onClick={() => carregarUsuarios(page)}
-                className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white bg-rose-600 rounded-xl hover:bg-rose-500 transition"
+                className="nb-button-primary !py-2 !px-4"
               >
                 <T>Tentar novamente</T>
               </button>
@@ -233,27 +243,32 @@ function ManagerDashboardPage() {
 
         <ManagerStatsGrid stats={stats} />
 
-        <div className="flex flex-col gap-4 mb-6 md:flex-row md:items-center md:justify-between">
-          <div className="relative flex-1">
-            <Search
-              size={18}
-              className="absolute -translate-y-1/2 left-4 top-1/2 text-slate-400"
-            />
-            <input
-              value={busca}
-              onChange={(event) => setBusca(event.target.value)}
-              placeholder="Buscar por nome, e-mail ou CPF..."
-              className="w-full py-4 pl-12 pr-4 text-sm border outline-none bg-white/80 border-slate-200 rounded-2xl dark:bg-slate-900 dark:border-slate-800 dark:text-white"
-            />
-          </div>
+        <section className="nb-card p-4 sm:p-5 mb-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="relative flex-1">
+              <Search
+                size={18}
+                className="absolute -translate-y-1/2 left-4 top-1/2 text-slate-400"
+              />
+              <input
+                id="manager-user-search"
+                name="managerUserSearch"
+                value={busca}
+                onChange={(event) => setBusca(event.target.value)}
+                placeholder="Buscar por nome, e-mail ou CPF..."
+                className="nb-input pl-12"
+              />
+            </div>
 
-          <button
-            onClick={() => setMostrarRecusados((valor) => !valor)}
-            className="px-5 py-4 text-xs font-black tracking-widest uppercase transition border rounded-2xl bg-white/80 border-slate-200 text-slate-700 hover:bg-white dark:bg-slate-900 dark:border-slate-800 dark:text-white"
-          >
-            <T>{mostrarRecusados ? "Ocultar recusadas" : "Mostrar recusadas"}</T>
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={() => setMostrarRecusados((valor) => !valor)}
+              className="nb-button-secondary"
+            >
+              <T>{mostrarRecusados ? "Ocultar contas recusadas" : "Mostrar contas recusadas"}</T>
+            </button>
+          </div>
+        </section>
 
         <ManagerUsersTable
           usuarios={usuarios}
@@ -265,9 +280,9 @@ function ManagerDashboardPage() {
           onAbrirExclusao={abrirModalExclusao}
         />
 
-        <div className="flex flex-col items-center justify-between gap-3 px-4 py-5 mt-6 border bg-white/80 rounded-2xl border-slate-200 dark:bg-slate-900 dark:border-slate-800 md:flex-row">
+        <section className="nb-card mt-6 p-4 sm:p-5 flex flex-col items-center justify-between gap-3 md:flex-row">
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            <T>Total filtrado:</T> {totalElements}
+            <T>Total encontrado:</T> {totalElements}
           </p>
 
           <div className="flex items-center gap-2">
@@ -275,7 +290,7 @@ function ManagerDashboardPage() {
               type="button"
               onClick={handlePrevPage}
               disabled={page <= 0}
-              className="px-4 py-2 text-xs font-bold transition border rounded-xl border-slate-300 dark:border-slate-700 disabled:opacity-40"
+              className="nb-button-ghost"
             >
               <T>Anterior</T>
             </button>
@@ -286,12 +301,12 @@ function ManagerDashboardPage() {
               type="button"
               onClick={handleNextPage}
               disabled={page + 1 >= totalPages}
-              className="px-4 py-2 text-xs font-bold transition border rounded-xl border-slate-300 dark:border-slate-700 disabled:opacity-40"
+              className="nb-button-ghost"
             >
-              <T>Proxima</T>
+              <T>Próxima</T>
             </button>
           </div>
-        </div>
+        </section>
       </main>
 
       <ConfirmationModal
@@ -299,7 +314,7 @@ function ManagerDashboardPage() {
         onClose={() => setModalExclusao({ open: false, id: null, nome: "" })}
         onConfirm={() => deletarUsuario(modalExclusao.id)}
         title="Excluir cliente"
-        description={`Confirma a exclusao definitiva de ${modalExclusao.nome}?`}
+        description={`Confirma a exclusão definitiva de ${modalExclusao.nome}?`}
         confirmText="Sim, excluir"
         isLoading={deletando}
       />
@@ -308,5 +323,3 @@ function ManagerDashboardPage() {
 }
 
 export default ManagerDashboardPage;
-
-

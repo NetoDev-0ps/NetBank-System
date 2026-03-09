@@ -5,7 +5,9 @@ import api from "../../core/api/apiClient";
 import { getCustomerData, logout } from "../../core/auth/session";
 import T from "../../shared/ui/Translate";
 import {
+  detectPixKeyType,
   extractPixApiError,
+  formatarPeloTipo,
   generateTransferIdempotencyKey,
   normalizePixKey,
   safeParseArray,
@@ -72,10 +74,10 @@ function PixAreaPage() {
         setEtapa("HUB");
       } catch (error) {
         if (import.meta.env.DEV) {
-          console.error("Erro fatal de sincronizacao:", error);
+          console.error("Erro fatal de sincroniza\u00e7\u00e3o:", error);
         }
 
-        setErro(extractPixApiError(error, "Falha ao carregar seguranca."));
+        setErro(extractPixApiError(error, "Falha ao carregar seguran\u00e7a Pix."));
         setEtapa("ERRO_FATAL");
       }
     };
@@ -216,7 +218,7 @@ function PixAreaPage() {
     const chaveLimpa = normalizePixKey(chaveBruta);
 
     if (!chaveLimpa) {
-      setErro("Insira uma chave valida.");
+      setErro("Insira uma chave v\u00e1lida.");
       return;
     }
 
@@ -225,17 +227,44 @@ function PixAreaPage() {
 
     try {
       const response = await api.get(`/pix/preview/${chaveLimpa}`);
-      setDadosDestino({ ...response.data, chaveUsada: chaveLimpa });
-      setChaveDestino(chaveLimpa);
+      const preview = response.data || {};
+
+      if (Number(preview.idDestino) === Number(usuario?.id)) {
+        setErro("N\u00e3o \u00e9 permitido transferir para sua pr\u00f3pria conta.");
+        return;
+      }
+
+      const tipoChave = preview.chaveTipo || detectPixKeyType(chaveLimpa);
+      const chaveFormatada =
+        tipoChave === "EMAIL" ? chaveLimpa : formatarPeloTipo(chaveLimpa, tipoChave);
+
+      setDadosDestino({
+        ...preview,
+        chaveUsada: chaveLimpa,
+        chaveTipo: tipoChave,
+      });
+      setChaveDestino(chaveFormatada || chaveLimpa);
       setEtapa("TRANSFERIR_VALOR");
     } catch (error) {
-      setErro(extractPixApiError(error, "Chave nao encontrada no sistema."));
+      setErro(extractPixApiError(error, "Chave n\u00e3o encontrada no sistema."));
     } finally {
       setLoading(false);
     }
   };
 
   const realizarTransferencia = async () => {
+    const valorNumerico = Number.parseFloat(String(valorTransferencia).replace(",", "."));
+
+    if (!Number.isFinite(valorNumerico) || valorNumerico <= 0) {
+      setErro("Informe um valor maior que zero.");
+      return;
+    }
+
+    if (Number(dadosDestino?.idDestino) === Number(usuario?.id)) {
+      setErro("N\u00e3o \u00e9 permitido transferir para sua pr\u00f3pria conta.");
+      return;
+    }
+
     const transferKey = idempotencyKey || generateTransferIdempotencyKey();
 
     if (!idempotencyKey) {
@@ -250,7 +279,7 @@ function PixAreaPage() {
         {
           idOrigem: usuario.id,
           idDestino: dadosDestino.idDestino,
-          valor: valorTransferencia,
+          valor: Number(valorNumerico.toFixed(2)),
           senha: senhaValidacao,
         },
         {
@@ -265,6 +294,7 @@ function PixAreaPage() {
       const novoRecente = {
         nome: dadosDestino.nome,
         chave: dadosDestino.chaveUsada,
+        chaveTipo: dadosDestino.chaveTipo,
         cpfMascarado: dadosDestino.cpfMascarado,
       };
       const recs = [novoRecente, ...recentes.filter((item) => item.chave !== novoRecente.chave)].slice(0, 5);
@@ -273,7 +303,7 @@ function PixAreaPage() {
 
       setEtapa("SUCESSO");
     } catch (error) {
-      setErro(extractPixApiError(error, "Nao foi possivel concluir a transferencia."));
+      setErro(extractPixApiError(error, "N\u00e3o foi poss\u00edvel concluir a transfer\u00eancia."));
       setSenhaValidacao("");
     } finally {
       setLoading(false);
@@ -310,68 +340,69 @@ function PixAreaPage() {
   }
 
   return (
-    <div
-      className="min-h-screen p-6 font-sans text-slate-900 dark:text-white bg-netlight-50 dark:bg-slate-950"
-      onClick={() => inputRef.current?.focus()}
-    >
-      <header className="flex items-center justify-between max-w-md mx-auto mb-10">
-        <button
-          onClick={handleVoltar}
-          className="p-3 text-blue-400 border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-2xl"
-        >
-          <ArrowLeft size={20} />
+    <div className="nb-page py-6 sm:py-8" onClick={() => inputRef.current?.focus()}>
+      <header className="nb-shell mb-6 flex items-center justify-between">
+        <button type="button" onClick={handleVoltar} className="nb-button-ghost !p-2.5" aria-label="Voltar">
+          <ArrowLeft size={18} />
         </button>
-        <h1 className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-primary dark:text-blue-100">
-          <T>Area Pix</T>
-        </h1>
-        <div className="w-12" />
+
+        <div className="text-center">
+          <p className="nb-eyebrow"><T>Conta digital</T></p>
+          <h1 className="text-lg font-extrabold text-slate-900 dark:text-white">
+            <T>{"\u00c1rea Pix NetBank"}</T>
+          </h1>
+        </div>
+
+        <div className="h-10 w-10" aria-hidden="true" />
       </header>
 
-      <main className="relative max-w-md mx-auto">
-        <PixFlowContent
-          etapa={etapa}
-          subEtapa={subEtapa}
-          erro={erro}
-          loading={loading}
-          inputRef={inputRef}
-          senhaSetup={senhaSetup}
-          confirmacaoSenha={confirmacaoSenha}
-          setSenhaSetup={setSenhaSetup}
-          setConfirmacaoSenha={setConfirmacaoSenha}
-          setSubEtapa={setSubEtapa}
-          finalizarSetupSenha={finalizarSetupSenha}
-          resetSetup={resetSetup}
-          handleAtivarChave={handleAtivarChave}
-          usuario={usuario}
-          minhasChaves={minhasChaves}
-          tiposCadastrados={tiposCadastrados}
-          carregarMinhasChaves={carregarMinhasChaves}
-          abrirModalExclusao={abrirModalExclusao}
-          chaveParaExcluir={chaveParaExcluir}
-          setChaveParaExcluir={setChaveParaExcluir}
-          confirmarExclusao={confirmarExclusao}
-          chaveDestino={chaveDestino}
-          setChaveDestino={setChaveDestino}
-          buscarDestinatario={buscarDestinatario}
-          favoritos={favoritos}
-          recentes={recentes}
-          toggleFavorito={toggleFavorito}
-          dadosDestino={dadosDestino}
-          valorTransferencia={valorTransferencia}
-          setValorTransferencia={setValorTransferencia}
-          setEtapa={setEtapa}
-          setErro={setErro}
-          idempotencyKey={idempotencyKey}
-          setIdempotencyKey={setIdempotencyKey}
-          senhaValidacao={senhaValidacao}
-          setSenhaValidacao={setSenhaValidacao}
-          realizarTransferencia={realizarTransferencia}
-          comprovante={comprovante}
-          onFinish={() => {
-            setIdempotencyKey("");
-            navigate("/dashboard");
-          }}
-        />
+      <main className="nb-shell max-w-3xl">
+        <section className="nb-card p-4 sm:p-6 md:p-8">
+          <PixFlowContent
+            etapa={etapa}
+            subEtapa={subEtapa}
+            erro={erro}
+            loading={loading}
+            inputRef={inputRef}
+            senhaSetup={senhaSetup}
+            confirmacaoSenha={confirmacaoSenha}
+            setSenhaSetup={setSenhaSetup}
+            setConfirmacaoSenha={setConfirmacaoSenha}
+            setSubEtapa={setSubEtapa}
+            finalizarSetupSenha={finalizarSetupSenha}
+            resetSetup={resetSetup}
+            handleAtivarChave={handleAtivarChave}
+            usuario={usuario}
+            minhasChaves={minhasChaves}
+            tiposCadastrados={tiposCadastrados}
+            carregarMinhasChaves={carregarMinhasChaves}
+            abrirModalExclusao={abrirModalExclusao}
+            chaveParaExcluir={chaveParaExcluir}
+            setChaveParaExcluir={setChaveParaExcluir}
+            confirmarExclusao={confirmarExclusao}
+            chaveDestino={chaveDestino}
+            setChaveDestino={setChaveDestino}
+            buscarDestinatario={buscarDestinatario}
+            favoritos={favoritos}
+            recentes={recentes}
+            toggleFavorito={toggleFavorito}
+            dadosDestino={dadosDestino}
+            valorTransferencia={valorTransferencia}
+            setValorTransferencia={setValorTransferencia}
+            setEtapa={setEtapa}
+            setErro={setErro}
+            idempotencyKey={idempotencyKey}
+            setIdempotencyKey={setIdempotencyKey}
+            senhaValidacao={senhaValidacao}
+            setSenhaValidacao={setSenhaValidacao}
+            realizarTransferencia={realizarTransferencia}
+            comprovante={comprovante}
+            onFinish={() => {
+              setIdempotencyKey("");
+              navigate("/dashboard");
+            }}
+          />
+        </section>
       </main>
     </div>
   );

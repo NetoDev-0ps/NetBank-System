@@ -29,7 +29,7 @@ jwt:
 
 app:
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:*,http://127.0.0.1:*}
 
 auth:
   captcha:
@@ -45,4 +45,5 @@ management:
     health:
       show-details: always
       show-components: always
+
 

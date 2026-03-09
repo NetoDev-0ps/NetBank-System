@@ -1,3 +1,6 @@
+import { formatBrazilianPhone, hasValidBrazilianDdd, onlyDigits } from "../../../core/utils/brPhone";
+import { formatCpf as formatCpfValue } from "../../../core/utils/brCpf";
+
 export const getDatasLimites = () => {
   const hoje = new Date();
   const ano = hoje.getFullYear();
@@ -12,22 +15,9 @@ export const getDatasLimites = () => {
 
 export const sanitizeLetters = (value) => value.replace(/[^\p{L}\s]/gu, "");
 
-export const formatCpf = (value) => {
-  let formatted = value.replace(/\D/g, "");
-  formatted = formatted.replace(/(\d{3})(\d)/, "$1.$2");
-  formatted = formatted.replace(/(\d{3})(\d)/, "$1.$2");
-  formatted = formatted.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+export const formatCpf = (value) => formatCpfValue(value);
 
-  return formatted.slice(0, 14);
-};
-
-export const formatPhone = (value) => {
-  let formatted = value.replace(/\D/g, "");
-  formatted = formatted.replace(/(\d{2})(\d)/, "($1) $2");
-  formatted = formatted.replace(/(\d)(\d{4})$/, "$1-$2");
-
-  return formatted.slice(0, 15);
-};
+export const formatPhone = (value) => formatBrazilianPhone(value).slice(0, 15);
 
 export const calculatePasswordStrength = (password) => {
   let score = 0;
@@ -49,28 +39,34 @@ export const validateRegistrationForm = ({
   const errors = {};
 
   if (form.nome.trim().length < 5 || !form.nome.trim().includes(" ")) {
-    errors.nome = "Insira nome e sobrenome";
+    errors.nome = "Informe nome e sobrenome";
   }
 
   if (form.telefone.length < 14) {
-    errors.telefone = "Telefone incompleto";
+    errors.telefone = "Informe o telefone completo";
+  } else {
+    const telefoneNumerico = onlyDigits(form.telefone);
+
+    if (!hasValidBrazilianDdd(telefoneNumerico)) {
+      errors.telefone = "DDD inválido. Use um DDD brasileiro válido";
+    }
   }
 
   if (form.cpf.length < 14) {
-    errors.cpf = "CPF incompleto";
+    errors.cpf = "Informe o CPF completo";
   }
 
   if (!form.dataNascimento) {
-    errors.dataNascimento = "Data e obrigatoria";
+    errors.dataNascimento = "Data é obrigatória";
   } else {
     const dataEscolhida = new Date(form.dataNascimento);
 
     if (dataEscolhida > new Date(maxDate)) {
-      errors.dataNascimento = "Apenas maiores de 18 anos";
+      errors.dataNascimento = "? necessário ter pelo menos 18 anos";
     }
 
     if (dataEscolhida < new Date(minDate)) {
-      errors.dataNascimento = "Data de nascimento invalida";
+      errors.dataNascimento = "Data de nascimento inválida";
     }
   }
 
@@ -78,19 +74,19 @@ export const validateRegistrationForm = ({
   const partesEmail = form.email.split("@");
 
   if (partesEmail.length !== 2 || !dominiosPermitidos.includes(partesEmail[1])) {
-    errors.email = "Use um e-mail valido (ex: @gmail.com)";
+    errors.email = "Use um e-mail válido (ex: @gmail.com)";
   }
 
   if (form.email !== form.confirmarEmail) {
-    errors.confirmarEmail = "Os e-mails nao conferem";
+    errors.confirmarEmail = "Os e-mails não conferem";
   }
 
   if (passwordStrength < 100) {
-    errors.senha = "Senha fraca. Siga a regra abaixo.";
+    errors.senha = "Senha fraca. Siga os critérios abaixo.";
   }
 
   if (form.senha !== form.confirmarSenha) {
-    errors.confirmarSenha = "As senhas nao conferem";
+    errors.confirmarSenha = "As senhas não conferem";
   }
 
   return {

@@ -129,17 +129,19 @@ public class UsuarioController {
             novoStatus = StatusConta.valueOf(dados.status().toUpperCase());
         } catch (IllegalArgumentException ex) {
             throw new IllegalArgumentException(
-                "STATUS_INVALIDO. Utilize ATIVA, SUSPENSA, BLOQUEADA, PENDENTE ou RECUSADA."
+                "STATUS_INVALIDO. Utilize ATIVA, SUSPENSA, BLOQUEADA, ENCERRADA, PENDENTE ou RECUSADA."
             );
         }
 
+        StatusConta statusAnterior = usuarioService.buscarPorId(id).getStatus();
         Usuario usuarioAtualizado = usuarioService.atualizarStatus(id, novoStatus);
+
         auditService.registrar(
             principal,
-            "ALTERAR_STATUS_USUARIO",
+            resolveStatusAuditAction(statusAnterior, usuarioAtualizado.getStatus()),
             "USUARIO",
             String.valueOf(id),
-            "Novo status: " + usuarioAtualizado.getStatus()
+            "Status: " + statusAnterior + " -> " + usuarioAtualizado.getStatus()
         );
 
         return ResponseEntity.ok(
@@ -186,10 +188,31 @@ public class UsuarioController {
         return ResponseEntity.noContent().build();
     }
 
+    private String resolveStatusAuditAction(StatusConta anterior, StatusConta atual) {
+        if (anterior == StatusConta.BLOQUEADA && atual == StatusConta.ATIVA) {
+            return "REATIVAR_USUARIO_BLOQUEADO";
+        }
+        if (atual == StatusConta.BLOQUEADA) {
+            return "BLOQUEAR_USUARIO";
+        }
+        if (atual == StatusConta.ENCERRADA) {
+            return "ENCERRAR_CONTA_USUARIO";
+        }
+        if (atual == StatusConta.SUSPENSA) {
+            return "SUSPENDER_USUARIO";
+        }
+        if (atual == StatusConta.ATIVA) {
+            return "ATIVAR_USUARIO";
+        }
+        if (atual == StatusConta.RECUSADA) {
+            return "RECUSAR_USUARIO";
+        }
+        return "ALTERAR_STATUS_USUARIO";
+    }
+
     private ResponseEntity<Object> accessDenied(HttpServletRequest request) {
         return ResponseEntity
             .status(403)
             .body(ApiErrorBodyFactory.build("ACESSO_NEGADO", request));
     }
 }
-

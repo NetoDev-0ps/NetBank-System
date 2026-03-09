@@ -1,4 +1,5 @@
 import { CheckCircle, XCircle, AlertTriangle, X } from "lucide-react";
+import T from "./Translate";
 
 function Notification({ message, type, onClose }) {
   if (!message) return null;
@@ -18,19 +19,28 @@ function Notification({ message, type, onClose }) {
     warning: <AlertTriangle className="text-amber-500" size={20} />,
   };
 
+  const title = type === "error" ? "Atenção" : type === "warning" ? "Aviso" : "Sucesso";
+
   return (
     <div
-      className={`fixed top-4 left-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 flex items-start gap-3 p-4 rounded-2xl border shadow-2xl backdrop-blur-md ${styles[type] || styles.success}`}
+      className={`fixed left-1/2 top-4 z-50 flex w-[calc(100%-2rem)] max-w-md -translate-x-1/2 items-start gap-3 rounded-2xl border p-4 shadow-2xl backdrop-blur-md ${styles[type] || styles.success}`}
+      role="status"
+      aria-live="polite"
     >
       {icons[type] || icons.success}
       <div className="flex-1">
         <p className="text-xs font-black uppercase tracking-widest">
-          {type === "error" ? "Atencao" : type === "warning" ? "Aviso" : "Sucesso"}
+          <T>{title}</T>
         </p>
         <p className="mt-1 text-sm">{message}</p>
       </div>
-      <button onClick={onClose} className="opacity-60 hover:opacity-100" aria-label="Fechar notificacao">
-        <X size={16} />
+      <button
+        type="button"
+        onClick={onClose}
+        className="nb-button-ghost !p-1.5"
+        aria-label="Fechar notificação"
+      >
+        <X size={14} />
       </button>
     </div>
   );

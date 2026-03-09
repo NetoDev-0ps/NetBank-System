@@ -106,6 +106,7 @@ class PixFlowIntegrationTest {
         destinoId = usuarioRepository.save(destino).getId();
 
         chavePixRepository.save(new ChavePix(null, "destino.pix@netbank.com", "EMAIL", destino));
+        chavePixRepository.save(new ChavePix(null, "85977776666", "TELEFONE", destino));
     }
 
     @Test
@@ -262,6 +263,102 @@ class PixFlowIntegrationTest {
         assertEquals(1, transacaoRepository.count());
     }
 
+    @Test
+    void shouldRejectTransferToSelf() throws IOException, InterruptedException {
+        String baseUrl = "http://localhost:" + port;
+        HttpClient client = HttpClient.newHttpClient();
+
+        LoginContext loginContext = loginCliente(client, baseUrl);
+        CsrfContext csrf = fetchCsrfContext(
+            client,
+            baseUrl,
+            loginContext.authCookie(),
+            loginContext.xsrfCookie()
+        );
+
+        String cookies = loginContext.authCookie() + "; " + csrf.csrfCookie();
+
+        HttpResponse<String> transferencia = send(
+            client,
+            "POST",
+            baseUrl + "/pix/transferir",
+            cookies,
+            csrf.csrfToken(),
+            "pix-self-transfer-key",
+            """
+            {
+              "idOrigem": %d,
+              "idDestino": %d,
+              "valor": 10.00,
+              "senha": "1234"
+            }
+            """.formatted(origemId, origemId)
+        );
+
+        assertEquals(400, transferencia.statusCode());
+        assertTrue(transferencia.body().contains("TRANSFERENCIA_PARA_SI_MESMO_NAO_PERMITIDA"));
+    }
+
+    @Test
+    void shouldRejectTransferWithNonPositiveValue() throws IOException, InterruptedException {
+        String baseUrl = "http://localhost:" + port;
+        HttpClient client = HttpClient.newHttpClient();
+
+        LoginContext loginContext = loginCliente(client, baseUrl);
+        CsrfContext csrf = fetchCsrfContext(
+            client,
+            baseUrl,
+            loginContext.authCookie(),
+            loginContext.xsrfCookie()
+        );
+
+        String cookies = loginContext.authCookie() + "; " + csrf.csrfCookie();
+
+        HttpResponse<String> transferencia = send(
+            client,
+            "POST",
+            baseUrl + "/pix/transferir",
+            cookies,
+            csrf.csrfToken(),
+            "pix-invalid-value-key",
+            """
+            {
+              "idOrigem": %d,
+              "idDestino": %d,
+              "valor": 0.00,
+              "senha": "1234"
+            }
+            """.formatted(origemId, destinoId)
+        );
+
+        assertEquals(400, transferencia.statusCode());
+    }
+
+    @Test
+    void shouldResolveFormattedPhonePixKey() throws IOException, InterruptedException {
+        String baseUrl = "http://localhost:" + port;
+        HttpClient client = HttpClient.newHttpClient();
+
+        LoginContext loginContext = loginCliente(client, baseUrl);
+        String cookies = loginContext.authCookie() + "; " + loginContext.xsrfCookie();
+
+        String chaveTelefone = URLEncoder.encode("(85) 97777-6666", StandardCharsets.UTF_8);
+        HttpResponse<String> preview = send(
+            client,
+            "GET",
+            baseUrl + "/pix/preview/" + chaveTelefone,
+            cookies,
+            null,
+            null,
+            null
+        );
+
+        assertEquals(200, preview.statusCode());
+        JsonNode previewBody = objectMapper.readTree(preview.body());
+        assertEquals("Cliente Destino Pix", previewBody.path("nome").asText());
+        assertEquals(destinoId.longValue(), previewBody.path("idDestino").asLong());
+        assertEquals("TELEFONE", previewBody.path("chaveTipo").asText());
+    }
     private LoginContext loginCliente(HttpClient client, String baseUrl) throws IOException, InterruptedException {
         HttpResponse<String> loginResponse = send(
             client,
@@ -370,6 +467,10 @@ class PixFlowIntegrationTest {
 
     private record CsrfContext(String csrfToken, String csrfCookie) {}
 }
+
+
+
+
 
 
 

@@ -20,8 +20,13 @@ const CustomerDashboardPage = lazy(() => import("./pages/dashboard/CustomerDashb
 const PixAreaPage = lazy(() => import("./pages/dashboard/PixAreaPage"));
 
 const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-screen">
-    <div className="w-10 h-10 border-4 border-blue-600 rounded-full border-t-transparent animate-spin" />
+  <div className="nb-page flex items-center justify-center">
+    <div className="nb-card p-6 sm:p-8 flex flex-col items-center gap-3">
+      <div className="w-11 h-11 rounded-full border-4 border-blue-500 border-t-transparent animate-spin" />
+      <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500 dark:text-slate-300">
+        Carregando
+      </p>
+    </div>
   </div>
 );
 
@@ -34,6 +39,7 @@ const RotaGerente = ({ children }) => {
 
   return ok ? children : <Navigate to="/login-gerente" replace />;
 };
+
 RotaGerente.propTypes = { children: PropTypes.node.isRequired };
 
 const RotaCliente = ({ children }) => {
@@ -45,6 +51,7 @@ const RotaCliente = ({ children }) => {
 
   return ok ? children : <Navigate to="/login-cliente" replace />;
 };
+
 RotaCliente.propTypes = { children: PropTypes.node.isRequired };
 
 function App() {
@@ -54,9 +61,15 @@ function App() {
     <ThemeProvider>
       <LanguageProvider>
         <AuthProvider>
-          <div className="w-full min-h-screen overflow-x-hidden transition-colors duration-500 bg-netlight-50 dark:bg-netdark-600 text-slate-900 dark:text-white">
+          <div className="relative min-h-screen overflow-x-hidden text-slate-900 dark:text-blue-50">
+            <div className="pointer-events-none fixed inset-0 opacity-35">
+              <WindSense />
+            </div>
+
+            <div className="nb-glow h-[24rem] w-[24rem] -top-24 -left-24 bg-brand-accent/20" />
+            <div className="nb-glow h-[26rem] w-[26rem] top-[38%] -right-24 bg-brand-primary/20" />
+
             <FloatingSettings />
-            <WindSense />
 
             <AnimatePresence mode="wait">
               <Suspense fallback={<PageLoader />}>
@@ -104,5 +117,3 @@ function App() {
 }
 
 export default App;
-
-

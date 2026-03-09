@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "app.cors")
 public class AppCorsProperties {
 
-    private List<String> allowedOrigins = List.of("http://localhost:5173");
+    private List<String> allowedOrigins = List.of("http://localhost:*", "http://127.0.0.1:*");
 
     public List<String> getAllowedOrigins() {
         return allowedOrigins;
@@ -16,7 +16,7 @@ public class AppCorsProperties {
 
     public void setAllowedOrigins(List<String> allowedOrigins) {
         if (allowedOrigins == null || allowedOrigins.isEmpty()) {
-            this.allowedOrigins = List.of("http://localhost:5173");
+            this.allowedOrigins = List.of("http://localhost:*", "http://127.0.0.1:*");
             return;
         }
 

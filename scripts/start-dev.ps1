@@ -1,6 +1,3 @@
-Set-StrictMode -Version Latest
-$ErrorActionPreference = "Stop"
-
 param(
   [switch]$SkipDatabase,
   [switch]$SkipBackend,
@@ -9,6 +6,9 @@ param(
   [int]$FrontendPort = 5173,
   [string]$ApiUrl = "http://localhost:8080"
 )
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $PSScriptRoot
 $databaseDir = Join-Path $root "database"

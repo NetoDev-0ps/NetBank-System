@@ -1,17 +1,17 @@
 import React from "react";
 
 const PixPasswordDisplay = ({ value }) => (
-  <div className="flex justify-center gap-3 mb-8">
+  <div className="flex justify-center gap-2 sm:gap-3 mb-6 sm:mb-8">
     {[0, 1, 2, 3].map((i) => (
       <div
         key={i}
-        className={`w-12 h-16 sm:w-14 sm:h-20 flex items-center justify-center border-2 rounded-2xl text-xl sm:text-2xl font-black transition-all duration-300 ${
+        className={`flex h-16 w-12 items-center justify-center rounded-2xl border text-xl font-black transition-all duration-300 sm:h-20 sm:w-14 sm:text-2xl ${
           value[i]
-            ? "border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-500/10 shadow-[0_0_15px_rgba(59,130,246,0.25)]"
-            : "border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-600 bg-white dark:bg-slate-900/50"
+            ? "border-brand-primary bg-brand-primary/10 text-brand-primary shadow-[0_0_20px_rgba(30,77,162,0.2)] dark:border-blue-300 dark:bg-blue-400/20 dark:text-blue-100"
+            : "border-slate-300 bg-white/75 text-slate-400 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-600"
         }`}
       >
-        {value[i] ? `( ${value[i]} )` : <span className="opacity-20">( )</span>}
+        {value[i] ? <span>{value[i]}</span> : <span className="opacity-25">*</span>}
       </div>
     ))}
   </div>

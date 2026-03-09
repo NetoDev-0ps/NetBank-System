@@ -14,6 +14,8 @@ public class UsuarioStatusPolicy {
                 throw new IllegalArgumentException("STATUS_SUSPENSO");
             case BLOQUEADA:
                 throw new IllegalArgumentException("STATUS_BLOQUEADO");
+            case ENCERRADA:
+                throw new IllegalArgumentException("STATUS_ENCERRADO");
             case RECUSADA:
                 throw new IllegalArgumentException("STATUS_RECUSADO");
             case ATIVA:

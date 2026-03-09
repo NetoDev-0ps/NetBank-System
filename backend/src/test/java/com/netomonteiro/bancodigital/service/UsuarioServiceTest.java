@@ -53,7 +53,8 @@ class UsuarioServiceTest {
             encoder,
             new UsuarioNormalizationService(),
             new UsuarioMapper(),
-            new UsuarioStatusPolicy()
+            new UsuarioStatusPolicy(),
+            new BrazilPhoneValidator()
         );
     }
 
@@ -80,6 +81,21 @@ class UsuarioServiceTest {
         assertEquals(StatusConta.PENDENTE, salvo.getStatus());
         assertEquals("CLIENTE", salvo.getCargo());
         assertEquals(BigDecimal.ZERO, salvo.getSaldo());
+    }
+
+    @Test
+    void shouldRejectCreateWhenDddIsInvalid() {
+        Usuario novo = new Usuario();
+        novo.setNome("Maria da Silva");
+        novo.setCpf("12345678900");
+        novo.setTelefone("00999991111");
+        novo.setEmail("maria@email.com");
+        novo.setSenha("Senha@123");
+        novo.setDataNascimento(LocalDate.of(1990, 1, 1));
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> usuarioService.criar(novo));
+
+        assertEquals("TELEFONE_DDD_INVALIDO", ex.getMessage());
     }
 
     @Test
